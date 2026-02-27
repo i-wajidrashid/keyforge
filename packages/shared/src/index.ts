@@ -9,3 +9,4 @@ export * from './utils/formatCode';
 export * from './utils/timeLeft';
 export * from './utils/base32';
 export * from './utils/platform';
+export * from './utils/clipboard';
