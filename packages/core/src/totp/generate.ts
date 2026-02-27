@@ -1,9 +1,6 @@
 import type { Algorithm } from '@keyforge/shared';
 
-/**
- * Generate a TOTP code using Web Crypto API (for Chrome extension).
- * On Tauri platforms, this should be replaced with Rust calls.
- */
+/** Generate a TOTP code using Web Crypto API (Chrome extension fallback). */
 export async function generateTOTP(
   secret: Uint8Array,
   time: number,
@@ -15,9 +12,6 @@ export async function generateTOTP(
   return generateHOTPCode(secret, counter, digits, algorithm);
 }
 
-/**
- * Internal: Generate HMAC-based OTP code using Web Crypto API.
- */
 async function generateHOTPCode(
   secret: Uint8Array,
   counter: number,
@@ -26,7 +20,6 @@ async function generateHOTPCode(
 ): Promise<string> {
   const hashAlgorithm = getHashAlgorithm(algorithm);
 
-  // Import key for HMAC
   const keyData = new Uint8Array(secret).buffer;
   const key = await crypto.subtle.importKey(
     'raw',
@@ -36,17 +29,15 @@ async function generateHOTPCode(
     ['sign']
   );
 
-  // Counter to 8-byte big-endian buffer
   const counterBuffer = new ArrayBuffer(8);
   const counterView = new DataView(counterBuffer);
   counterView.setBigUint64(0, BigInt(counter));
 
-  // HMAC sign
   const hmacResult = new Uint8Array(
     await crypto.subtle.sign('HMAC', key, counterBuffer)
   );
 
-  // Dynamic truncation (RFC 4226 Section 5.4)
+  // Dynamic truncation (RFC 4226 §5.4)
   const offset = hmacResult[hmacResult.length - 1] & 0x0f;
   const binary =
     ((hmacResult[offset] & 0x7f) << 24) |

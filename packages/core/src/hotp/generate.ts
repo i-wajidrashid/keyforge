@@ -1,9 +1,6 @@
 import type { Algorithm } from '@keyforge/shared';
 
-/**
- * Generate an HOTP code using Web Crypto API (for Chrome extension).
- * On Tauri platforms, this should be replaced with Rust calls.
- */
+/** Generate an HOTP code using Web Crypto API (Chrome extension fallback). */
 export async function generateHOTP(
   secret: Uint8Array,
   counter: number,

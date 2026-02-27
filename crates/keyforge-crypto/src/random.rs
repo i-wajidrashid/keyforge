@@ -1,22 +1,19 @@
-//! Secure random number generation
+//! Secure random generation
 
 use rand::RngCore;
 
-/// Generate cryptographically secure random bytes
 pub fn generate_bytes(length: usize) -> Vec<u8> {
     let mut bytes = vec![0u8; length];
     rand::thread_rng().fill_bytes(&mut bytes);
     bytes
 }
 
-/// Generate a random 16-byte salt
 pub fn generate_salt() -> [u8; 16] {
     let mut salt = [0u8; 16];
     rand::thread_rng().fill_bytes(&mut salt);
     salt
 }
 
-/// Generate a random 12-byte nonce for AES-256-GCM
 pub fn generate_nonce() -> [u8; 12] {
     let mut nonce = [0u8; 12];
     rand::thread_rng().fill_bytes(&mut nonce);

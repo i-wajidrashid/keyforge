@@ -8,16 +8,13 @@ use aes_gcm::{
 pub const NONCE_SIZE: usize = 12;
 pub const TAG_SIZE: usize = 16;
 
-/// Encrypt plaintext using AES-256-GCM
-///
-/// Returns: [12 bytes nonce][N bytes ciphertext][16 bytes GCM tag]
-/// The nonce is randomly generated and prepended to the output.
+/// Encrypt plaintext using AES-256-GCM. Returns `[nonce ‖ ciphertext ‖ tag]`.
 pub fn encrypt(plaintext: &[u8], key: &[u8; 32]) -> Result<Vec<u8>, String> {
     let nonce_bytes = crate::random::generate_bytes(NONCE_SIZE);
     encrypt_with_nonce(plaintext, key, &nonce_bytes)
 }
 
-/// Encrypt with a specific nonce (for testing)
+/// Encrypt with a specific nonce (testing only).
 pub fn encrypt_with_nonce(
     plaintext: &[u8],
     key: &[u8; 32],
@@ -31,7 +28,7 @@ pub fn encrypt_with_nonce(
         .encrypt(nonce, plaintext)
         .map_err(|e| format!("Encryption failed: {}", e))?;
 
-    // Output format: [nonce][ciphertext+tag]
+    // [nonce][ciphertext+tag]
     let mut output = Vec::with_capacity(NONCE_SIZE + ciphertext.len());
     output.extend_from_slice(nonce_bytes);
     output.extend_from_slice(&ciphertext);
@@ -39,9 +36,7 @@ pub fn encrypt_with_nonce(
     Ok(output)
 }
 
-/// Decrypt ciphertext that was encrypted with `encrypt`
-///
-/// Input format: [12 bytes nonce][N bytes ciphertext][16 bytes GCM tag]
+/// Decrypt ciphertext produced by `encrypt`. Input: `[nonce ‖ ciphertext ‖ tag]`.
 pub fn decrypt(encrypted: &[u8], key: &[u8; 32]) -> Result<Vec<u8>, String> {
     if encrypted.len() < NONCE_SIZE + TAG_SIZE {
         return Err("Ciphertext too short".to_string());

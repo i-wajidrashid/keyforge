@@ -13,9 +13,7 @@ export interface ParsedOtpUri {
   counter: number;
 }
 
-/**
- * Parse an otpauth:// URI into its component parts.
- */
+/** Parse an otpauth:// URI into its component parts. */
 export function parseOtpUri(uri: string): ParsedOtpUri {
   if (!uri.startsWith('otpauth://')) {
     throw new Error('Invalid otpauth URI: must start with otpauth://');
@@ -23,12 +21,12 @@ export function parseOtpUri(uri: string): ParsedOtpUri {
 
   const url = new URL(uri);
   const type = url.hostname as TokenType;
-  
+
   if (type !== 'totp' && type !== 'hotp') {
     throw new Error(`Unknown token type: ${type}`);
   }
 
-  // Parse label (path without leading slash)
+  // Parse label
   const label = decodeURIComponent(url.pathname.slice(1));
   let issuerFromLabel: string | undefined;
   let account: string;

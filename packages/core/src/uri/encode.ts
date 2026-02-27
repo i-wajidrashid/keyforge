@@ -12,9 +12,7 @@ export interface OtpUriParams {
   counter?: number;
 }
 
-/**
- * Encode token parameters into an otpauth:// URI.
- */
+/** Encode token parameters into an otpauth:// URI. */
 export function encodeOtpUri(params: OtpUriParams): string {
   const secretBase32 = base32Encode(params.secret);
   const label = `${encodeURIComponent(params.issuer)}:${encodeURIComponent(params.account)}`;

@@ -1,9 +1,9 @@
-//! Export vault tokens
+//! Token export
 
 use crate::db::Vault;
 
 impl Vault {
-    /// Export all tokens as otpauth:// URIs (plaintext)
+    /// Export all tokens as `otpauth://` URIs (plaintext).
     pub fn export_uris(&self) -> Result<Vec<String>, String> {
         let tokens = self.list_tokens()?;
         let mut uris = Vec::new();
@@ -29,7 +29,7 @@ impl Vault {
         Ok(uris)
     }
 
-    /// Export all tokens as encrypted JSON blob
+    /// Export all tokens as an encrypted JSON blob.
     pub fn export_encrypted(&self, export_password: &[u8]) -> Result<Vec<u8>, String> {
         let uris = self.export_uris()?;
         let json = serde_json::to_vec(&uris).map_err(|e| format!("Failed to serialize: {}", e))?;
@@ -39,7 +39,7 @@ impl Vault {
         let key = keyforge_crypto::kdf::derive_key(export_password, &salt, &params)?;
         let encrypted = keyforge_crypto::aead::encrypt(&json, &key)?;
 
-        // Output: [salt][encrypted]
+        // [salt][encrypted]
         let mut output = Vec::new();
         output.extend_from_slice(&salt);
         output.extend_from_slice(&encrypted);

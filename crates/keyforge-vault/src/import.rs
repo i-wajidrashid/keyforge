@@ -1,10 +1,10 @@
-//! Import tokens from various sources
+//! Token import
 
 use crate::db::Vault;
 use crate::token::NewToken;
 
 impl Vault {
-    /// Import tokens from a list of otpauth:// URIs
+    /// Import tokens from `otpauth://` URIs.
     pub fn import_uris(&self, uris: &[String]) -> Result<usize, String> {
         let mut count = 0;
         for uri in uris {
@@ -16,7 +16,7 @@ impl Vault {
         Ok(count)
     }
 
-    /// Import from encrypted KeyForge export
+    /// Import from an encrypted KeyForge export.
     pub fn import_encrypted(&self, data: &[u8], password: &[u8]) -> Result<usize, String> {
         if data.len() < 16 {
             return Err("Invalid export file".to_string());
@@ -36,13 +36,13 @@ impl Vault {
     }
 }
 
-/// Parse an otpauth:// URI into a NewToken
+/// Parse an `otpauth://` URI into a NewToken.
 pub fn parse_otpauth_uri(uri: &str) -> Result<Option<NewToken>, String> {
     if !uri.starts_with("otpauth://") {
         return Err(format!("Invalid otpauth URI: {}", uri));
     }
 
-    let without_scheme = &uri[10..]; // Remove "otpauth://"
+    let without_scheme = &uri[10..];
     let (token_type, rest) = without_scheme
         .split_once('/')
         .ok_or_else(|| "Missing token type in URI".to_string())?;
@@ -57,7 +57,7 @@ pub fn parse_otpauth_uri(uri: &str) -> Result<Option<NewToken>, String> {
         .split_once('?')
         .ok_or_else(|| "Missing query parameters in URI".to_string())?;
 
-    // Parse label (issuer:account or just account)
+    // label = "issuer:account" or just "account"
     let label = urlencoding_decode(label);
     let (issuer_from_label, account) = if let Some((issuer, account)) = label.split_once(':') {
         (Some(issuer.to_string()), account.to_string())
@@ -65,7 +65,6 @@ pub fn parse_otpauth_uri(uri: &str) -> Result<Option<NewToken>, String> {
         (None, label.to_string())
     };
 
-    // Parse query parameters
     let params: std::collections::HashMap<String, String> = query
         .split('&')
         .filter_map(|p| {

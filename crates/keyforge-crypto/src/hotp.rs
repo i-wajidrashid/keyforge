@@ -5,7 +5,6 @@ use sha1::Sha1;
 use sha2::{Sha256, Sha512};
 use zeroize::Zeroize;
 
-/// Supported HMAC algorithms
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Algorithm {
     SHA1,
@@ -13,13 +12,7 @@ pub enum Algorithm {
     SHA512,
 }
 
-/// Generate an HOTP code per RFC 4226
-///
-/// # Arguments
-/// * `secret` - The shared secret key
-/// * `counter` - The counter value
-/// * `digits` - Number of digits in the output code (6 or 8)
-/// * `algorithm` - The HMAC algorithm to use
+/// Generate an HOTP code per RFC 4226.
 pub fn generate(secret: &[u8], counter: u64, digits: u32, algorithm: Algorithm) -> String {
     let counter_bytes = counter.to_be_bytes();
 
@@ -44,7 +37,7 @@ pub fn generate(secret: &[u8], counter: u64, digits: u32, algorithm: Algorithm) 
         }
     };
 
-    // Dynamic truncation (RFC 4226 Section 5.4)
+    // Dynamic truncation (RFC 4226 §5.4)
     let offset = (hmac_result[hmac_result.len() - 1] & 0x0f) as usize;
     let binary = ((hmac_result[offset] as u32 & 0x7f) << 24)
         | ((hmac_result[offset + 1] as u32) << 16)

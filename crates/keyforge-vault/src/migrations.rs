@@ -3,7 +3,6 @@
 use rusqlite::Connection;
 
 pub fn run_migrations(conn: &Connection) -> Result<(), String> {
-    // Create migrations table if it doesn't exist
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS migrations (
             version INTEGER PRIMARY KEY,

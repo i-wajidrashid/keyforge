@@ -7,7 +7,6 @@ use zeroize::Zeroize;
 
 use crate::db::Vault;
 
-/// Token representation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Token {
     pub id: String,
@@ -42,19 +41,15 @@ pub struct NewToken {
 }
 
 impl Vault {
-    /// Insert a new token into the vault
     pub fn add_token(&self, mut new_token: NewToken) -> Result<Token, String> {
         let id = Uuid::new_v4().to_string();
         let now = Utc::now().to_rfc3339();
 
-        // Encrypt the secret
         let encrypted_secret = keyforge_crypto::aead::encrypt(&new_token.secret, self.secret_key())
             .map_err(|e| format!("Failed to encrypt secret: {}", e))?;
 
-        // Zeroize the plaintext secret
         new_token.secret.zeroize();
 
-        // Get the next sort order
         let max_sort: i32 = self
             .conn()
             .query_row(
@@ -103,7 +98,7 @@ impl Vault {
         })
     }
 
-    /// Get all tokens (without decrypted secrets)
+    /// List all tokens (secrets remain encrypted).
     pub fn list_tokens(&self) -> Result<Vec<Token>, String> {
         let mut stmt = self.conn().prepare(
             "SELECT id, issuer, account, algorithm, digits, type, period, counter, icon, sort_order, created_at, updated_at, last_modified, device_id, sync_version
@@ -137,7 +132,7 @@ impl Vault {
             .map_err(|e| format!("Failed to collect tokens: {}", e))
     }
 
-    /// Get a single token by ID
+    /// Get a single token by ID.
     pub fn get_token(&self, id: &str) -> Result<Option<Token>, String> {
         let mut stmt = self.conn().prepare(
             "SELECT id, issuer, account, algorithm, digits, type, period, counter, icon, sort_order, created_at, updated_at, last_modified, device_id, sync_version
@@ -173,7 +168,7 @@ impl Vault {
         }
     }
 
-    /// Get the decrypted secret for a token
+    /// Decrypt and return the secret for a token.
     pub fn get_token_secret(&self, id: &str) -> Result<Vec<u8>, String> {
         let encrypted: Vec<u8> = self
             .conn()
@@ -188,7 +183,7 @@ impl Vault {
             .map_err(|e| format!("Failed to decrypt secret: {}", e))
     }
 
-    /// Update token metadata (issuer and account)
+    /// Update token metadata.
     pub fn update_token(&self, id: &str, issuer: &str, account: &str) -> Result<(), String> {
         let now = Utc::now().to_rfc3339();
         let rows = self
@@ -205,7 +200,7 @@ impl Vault {
         Ok(())
     }
 
-    /// Delete a token
+    /// Delete a token.
     pub fn delete_token(&self, id: &str) -> Result<(), String> {
         self.conn()
             .execute("DELETE FROM tokens WHERE id = ?1", rusqlite::params![id])
@@ -213,7 +208,7 @@ impl Vault {
         Ok(())
     }
 
-    /// Update token sort orders
+    /// Reorder tokens by supplying IDs in desired order.
     pub fn reorder_tokens(&self, id_order: &[String]) -> Result<(), String> {
         let tx = self
             .conn()
@@ -233,7 +228,7 @@ impl Vault {
         Ok(())
     }
 
-    /// Increment HOTP counter and return the new value
+    /// Increment HOTP counter, returning the new value.
     pub fn increment_counter(&self, id: &str) -> Result<u64, String> {
         let now = Utc::now().to_rfc3339();
         self.conn()

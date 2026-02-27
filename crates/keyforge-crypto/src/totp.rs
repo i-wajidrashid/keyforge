@@ -4,14 +4,7 @@ use crate::hotp;
 
 pub use hotp::Algorithm;
 
-/// Generate a TOTP code per RFC 6238
-///
-/// # Arguments
-/// * `secret` - The shared secret key
-/// * `time` - Current Unix timestamp in seconds
-/// * `period` - Time step in seconds (typically 30)
-/// * `digits` - Number of digits (6 or 8)
-/// * `algorithm` - The HMAC algorithm to use
+/// Generate a TOTP code per RFC 6238.
 pub fn generate(
     secret: &[u8],
     time: u64,
@@ -23,7 +16,7 @@ pub fn generate(
     hotp::generate(secret, counter, digits, algorithm)
 }
 
-/// Get the number of seconds remaining in the current period
+/// Seconds remaining in the current TOTP period.
 pub fn time_remaining(time: u64, period: u64) -> u64 {
     period - (time % period)
 }

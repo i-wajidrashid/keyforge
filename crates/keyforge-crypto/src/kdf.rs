@@ -1,14 +1,12 @@
-//! Key derivation using Argon2id
+//! Argon2id key derivation
 
 use argon2::{Algorithm, Argon2, Params, Version};
 
-/// Default Argon2id parameters per SECURITY.md
 pub const DEFAULT_MEMORY_KIB: u32 = 65536; // 64 MiB
 pub const DEFAULT_TIME_COST: u32 = 3;
 pub const DEFAULT_PARALLELISM: u32 = 4;
-pub const KEY_LENGTH: usize = 32; // 256-bit key
+pub const KEY_LENGTH: usize = 32;
 
-/// KDF parameters
 #[derive(Debug, Clone)]
 pub struct KdfParams {
     pub memory_kib: u32,
@@ -26,15 +24,7 @@ impl Default for KdfParams {
     }
 }
 
-/// Derive a 256-bit key from a password using Argon2id
-///
-/// # Arguments
-/// * `password` - The master password
-/// * `salt` - 16-byte random salt
-/// * `params` - Argon2id parameters
-///
-/// # Returns
-/// 32-byte derived key
+/// Derive a 256-bit key from a password using Argon2id.
 pub fn derive_key(
     password: &[u8],
     salt: &[u8; 16],
@@ -58,9 +48,7 @@ pub fn derive_key(
     Ok(output)
 }
 
-/// Derive two separate keys from a password (one for SQLCipher, one for secret encryption)
-///
-/// Uses different salts to ensure key independence
+/// Derive two independent keys (SQLCipher + secret encryption) from a single password.
 pub fn derive_key_pair(
     password: &[u8],
     sqlcipher_salt: &[u8; 16],

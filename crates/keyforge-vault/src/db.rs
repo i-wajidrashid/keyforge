@@ -1,18 +1,17 @@
-//! SQLCipher database connection management
+//! SQLCipher vault
 
 use rusqlite::Connection;
 use zeroize::Zeroize;
 
 use crate::migrations;
 
-/// Vault database wrapper
 pub struct Vault {
     conn: Connection,
     secret_key: [u8; 32],
 }
 
 impl Vault {
-    /// Create a new vault database
+    /// Create a new encrypted vault at `path`.
     pub fn create(
         path: &str,
         sqlcipher_key: &[u8; 32],
@@ -28,7 +27,7 @@ impl Vault {
         Ok(vault)
     }
 
-    /// Open an existing vault database
+    /// Open an existing encrypted vault.
     pub fn open(
         path: &str,
         sqlcipher_key: &[u8; 32],
@@ -45,24 +44,22 @@ impl Vault {
     }
 
     fn set_key(conn: &Connection, key: &[u8; 32]) -> Result<(), String> {
-        // Format key as hex string for SQLCipher PRAGMA
         let hex_key: String = key.iter().map(|b| format!("{:02x}", b)).collect();
         conn.pragma_update(None, "key", format!("x'{}'", hex_key))
             .map_err(|e| format!("Failed to set encryption key: {}", e))?;
 
-        // Verify the database is accessible
         conn.execute_batch("SELECT count(*) FROM sqlite_master;")
             .map_err(|_| "Wrong password or corrupted vault".to_string())?;
 
         Ok(())
     }
 
-    /// Get a reference to the database connection
+    /// Get a reference to the database connection.
     pub(crate) fn conn(&self) -> &Connection {
         &self.conn
     }
 
-    /// Get the secret encryption key
+    /// Get the secret encryption key.
     pub(crate) fn secret_key(&self) -> &[u8; 32] {
         &self.secret_key
     }

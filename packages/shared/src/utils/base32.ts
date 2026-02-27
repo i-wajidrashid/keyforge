@@ -1,9 +1,6 @@
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
-/**
- * Decode a Base32 string into bytes.
- * Strips spaces, dashes, and padding before decoding.
- */
+/** Decode a Base32 string into bytes (strips spaces, dashes, padding). */
 export function base32Decode(input: string): Uint8Array {
   const cleaned = input.replace(/[\s\-=]/g, '').toUpperCase();
   
@@ -35,9 +32,7 @@ export function base32Decode(input: string): Uint8Array {
   return new Uint8Array(output);
 }
 
-/**
- * Encode bytes as a Base32 string (no padding).
- */
+/** Encode bytes as a Base32 string (no padding). */
 export function base32Encode(data: Uint8Array): string {
   let result = '';
   let buffer = 0;

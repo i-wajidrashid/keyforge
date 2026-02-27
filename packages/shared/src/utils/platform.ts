@@ -1,11 +1,8 @@
 import type { Platform } from '../types/platform';
 
-/**
- * Detect the current runtime platform.
- */
+/** Detect the current runtime platform. */
 export function detectPlatform(): Platform {
   if (typeof window !== 'undefined' && '__TAURI__' in window) {
-    // Check if mobile or desktop
     if (typeof navigator !== 'undefined' && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
       return 'tauri-mobile';
     }
@@ -21,9 +18,7 @@ export function detectPlatform(): Platform {
   return 'web';
 }
 
-/**
- * Check if the current runtime has access to Rust via Tauri.
- */
+/** Whether the current runtime has Rust access via Tauri. */
 export function hasTauriBridge(): boolean {
   const platform = detectPlatform();
   return platform === 'tauri-desktop' || platform === 'tauri-mobile';
