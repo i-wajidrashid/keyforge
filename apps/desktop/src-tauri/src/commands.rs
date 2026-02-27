@@ -85,9 +85,7 @@ pub fn vault_create(password: String, state: State<'_, AppState>) -> Result<Stri
         &kdf_params(),
     )?;
 
-    let vault_dir = dirs_next::data_local_dir()
-        .unwrap_or_else(|| std::path::PathBuf::from("."))
-        .join("com.keyforge.app");
+    let vault_dir = vault_dir()?;
     std::fs::create_dir_all(&vault_dir)
         .map_err(|e| format!("Failed to create vault directory: {e}"))?;
 
@@ -120,9 +118,7 @@ pub fn vault_create(password: String, state: State<'_, AppState>) -> Result<Stri
 /// database.
 #[tauri::command]
 pub fn vault_unlock(password: String, state: State<'_, AppState>) -> Result<bool, String> {
-    let vault_dir = dirs_next::data_local_dir()
-        .unwrap_or_else(|| std::path::PathBuf::from("."))
-        .join("com.keyforge.app");
+    let vault_dir = vault_dir()?;
 
     let vault_path = vault_dir.join("keyforge.vault");
     if !vault_path.exists() {
@@ -173,9 +169,7 @@ pub fn vault_is_locked(state: State<'_, AppState>) -> Result<bool, String> {
 /// Check whether a vault file exists on disk.
 #[tauri::command]
 pub fn vault_exists() -> Result<bool, String> {
-    let vault_dir = dirs_next::data_local_dir()
-        .unwrap_or_else(|| std::path::PathBuf::from("."))
-        .join("com.keyforge.app");
+    let vault_dir = vault_dir()?;
     Ok(vault_dir.join("keyforge.vault").exists())
 }
 
@@ -220,8 +214,7 @@ pub struct AddTokenInput {
 /// Add a new token to the vault.
 #[tauri::command]
 pub fn token_add(input: AddTokenInput, state: State<'_, AppState>) -> Result<Token, String> {
-    let secret_bytes =
-        base32_decode(&input.secret).ok_or_else(|| "Invalid Base32 secret".to_string())?;
+    let secret_bytes = base32_decode(&input.secret)?;
 
     let guard = state.vault.lock().map_err(|e| e.to_string())?;
     let vault = guard.as_ref().ok_or("Vault is locked")?;
@@ -325,7 +318,7 @@ pub fn otp_generate_totp_raw(
     digits: u32,
     period: u64,
 ) -> Result<String, String> {
-    let secret_bytes = base32_decode(&secret).ok_or_else(|| "Invalid Base32 secret".to_string())?;
+    let secret_bytes = base32_decode(&secret)?;
     let algo = parse_algorithm(&algorithm)?;
 
     let now = std::time::SystemTime::now()
@@ -412,11 +405,19 @@ pub fn platform_info() -> Result<serde_json::Value, String> {
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-fn base32_decode(input: &str) -> Option<Vec<u8>> {
+/// Resolve the vault data directory (platform-specific).
+fn vault_dir() -> Result<std::path::PathBuf, String> {
+    let base = dirs_next::data_local_dir()
+        .ok_or("Cannot determine local data directory for this platform")?;
+    Ok(base.join("com.keyforge.app"))
+}
+
+fn base32_decode(input: &str) -> Result<Vec<u8>, String> {
     base32::decode(
         base32::Alphabet::Rfc4648 { padding: false },
         &input.to_uppercase().replace([' ', '-'], ""),
     )
+    .ok_or_else(|| "Invalid Base32 secret: expected uppercase A-Z and 2-7 characters".to_string())
 }
 
 fn parse_algorithm(s: &str) -> Result<keyforge_crypto::hotp::Algorithm, String> {
