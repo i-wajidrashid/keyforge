@@ -1,0 +1,19 @@
+[package]
+name = "keyforge-crypto"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Cryptographic primitives for KeyForge: TOTP, HOTP, Argon2id KDF, AES-256-GCM"
+
+[dependencies]
+hmac = { workspace = true }
+sha1 = { workspace = true }
+sha2 = { workspace = true }
+argon2 = { workspace = true }
+aes-gcm = { workspace = true }
+zeroize = { workspace = true }
+rand = { workspace = true }
+base32 = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }

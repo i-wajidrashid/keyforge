@@ -1,0 +1,8 @@
+[package]
+name = "keyforge-sync"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "P2P sync engine for KeyForge (Phase 3 - placeholder)"
+
+[dependencies]
