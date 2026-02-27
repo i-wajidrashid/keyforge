@@ -1,6 +1,11 @@
 //! Token import
 
+use crate::constants::{
+    DEFAULT_ALGORITHM, DEFAULT_COUNTER, DEFAULT_DIGITS, DEFAULT_ISSUER, DEFAULT_PERIOD,
+    EXPORT_SALT_SIZE, OTPAUTH_SCHEME, OTPAUTH_SCHEME_LEN, TOKEN_TYPE_HOTP, TOKEN_TYPE_TOTP,
+};
 use crate::db::Vault;
+use crate::error::VaultError;
 use crate::token::NewToken;
 
 impl Vault {
@@ -18,11 +23,11 @@ impl Vault {
 
     /// Import from an encrypted KeyForge export.
     pub fn import_encrypted(&self, data: &[u8], password: &[u8]) -> Result<usize, String> {
-        if data.len() < 16 {
-            return Err("Invalid export file".to_string());
+        if data.len() < EXPORT_SALT_SIZE {
+            return Err(VaultError::InvalidExportFile.to_string());
         }
-        let (salt_bytes, encrypted) = data.split_at(16);
-        let mut salt = [0u8; 16];
+        let (salt_bytes, encrypted) = data.split_at(EXPORT_SALT_SIZE);
+        let mut salt = [0u8; EXPORT_SALT_SIZE];
         salt.copy_from_slice(salt_bytes);
 
         let params = keyforge_crypto::kdf::KdfParams::default();
@@ -30,7 +35,7 @@ impl Vault {
         let json = keyforge_crypto::aead::decrypt(encrypted, &key)?;
 
         let uris: Vec<String> =
-            serde_json::from_slice(&json).map_err(|e| format!("Failed to parse export: {}", e))?;
+            serde_json::from_slice(&json).map_err(|e| VaultError::Serialization(e.to_string()))?;
 
         self.import_uris(&uris)
     }
@@ -38,24 +43,24 @@ impl Vault {
 
 /// Parse an `otpauth://` URI into a NewToken.
 pub fn parse_otpauth_uri(uri: &str) -> Result<Option<NewToken>, String> {
-    if !uri.starts_with("otpauth://") {
-        return Err(format!("Invalid otpauth URI: {}", uri));
+    if !uri.starts_with(OTPAUTH_SCHEME) {
+        return Err(VaultError::InvalidUri(uri.to_string()).to_string());
     }
 
-    let without_scheme = &uri[10..];
+    let without_scheme = &uri[OTPAUTH_SCHEME_LEN..];
     let (token_type, rest) = without_scheme
         .split_once('/')
-        .ok_or_else(|| "Missing token type in URI".to_string())?;
+        .ok_or_else(|| VaultError::InvalidUri("missing token type".to_string()))?;
 
     let token_type = match token_type {
-        "totp" => "totp".to_string(),
-        "hotp" => "hotp".to_string(),
-        _ => return Err(format!("Unknown token type: {}", token_type)),
+        t if t == TOKEN_TYPE_TOTP => TOKEN_TYPE_TOTP.to_string(),
+        t if t == TOKEN_TYPE_HOTP => TOKEN_TYPE_HOTP.to_string(),
+        _ => return Err(VaultError::UnknownTokenType(token_type.to_string()).to_string()),
     };
 
     let (label, query) = rest
         .split_once('?')
-        .ok_or_else(|| "Missing query parameters in URI".to_string())?;
+        .ok_or_else(|| VaultError::InvalidUri("missing query parameters".to_string()))?;
 
     // label = "issuer:account" or just "account"
     let label = urlencoding_decode(label);
@@ -75,39 +80,39 @@ pub fn parse_otpauth_uri(uri: &str) -> Result<Option<NewToken>, String> {
 
     let secret_b32 = params
         .get("secret")
-        .ok_or_else(|| "Missing secret parameter".to_string())?;
+        .ok_or(VaultError::MissingUriParam("secret"))?;
 
     let secret = base32::decode(
         base32::Alphabet::Rfc4648 { padding: false },
         &secret_b32.to_uppercase(),
     )
-    .ok_or_else(|| "Invalid base32 secret".to_string())?;
+    .ok_or(VaultError::InvalidBase32Secret)?;
 
     let issuer = params
         .get("issuer")
         .map(|s| s.to_string())
         .or(issuer_from_label)
-        .unwrap_or_else(|| "Unknown".to_string());
+        .unwrap_or_else(|| DEFAULT_ISSUER.to_string());
 
     let algorithm = params
         .get("algorithm")
         .map(|s| s.to_uppercase())
-        .unwrap_or_else(|| "SHA1".to_string());
+        .unwrap_or_else(|| DEFAULT_ALGORITHM.to_string());
 
     let digits: u32 = params
         .get("digits")
         .and_then(|s| s.parse().ok())
-        .unwrap_or(6);
+        .unwrap_or(DEFAULT_DIGITS);
 
     let period: u32 = params
         .get("period")
         .and_then(|s| s.parse().ok())
-        .unwrap_or(30);
+        .unwrap_or(DEFAULT_PERIOD);
 
     let counter: u64 = params
         .get("counter")
         .and_then(|s| s.parse().ok())
-        .unwrap_or(0);
+        .unwrap_or(DEFAULT_COUNTER);
 
     Ok(Some(NewToken {
         issuer,

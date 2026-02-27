@@ -3,6 +3,7 @@
 use rusqlite::Connection;
 use zeroize::Zeroize;
 
+use crate::error::VaultError;
 use crate::migrations;
 
 pub struct Vault {
@@ -17,7 +18,7 @@ impl Vault {
         sqlcipher_key: &[u8; 32],
         secret_key: [u8; 32],
     ) -> Result<Self, String> {
-        let conn = Connection::open(path).map_err(|e| format!("Failed to create vault: {}", e))?;
+        let conn = Connection::open(path).map_err(|e| VaultError::DatabaseOpen(e.to_string()))?;
 
         Self::set_key(&conn, sqlcipher_key)?;
 
@@ -33,7 +34,7 @@ impl Vault {
         sqlcipher_key: &[u8; 32],
         secret_key: [u8; 32],
     ) -> Result<Self, String> {
-        let conn = Connection::open(path).map_err(|e| format!("Failed to open vault: {}", e))?;
+        let conn = Connection::open(path).map_err(|e| VaultError::DatabaseOpen(e.to_string()))?;
 
         Self::set_key(&conn, sqlcipher_key)?;
 
@@ -46,10 +47,10 @@ impl Vault {
     fn set_key(conn: &Connection, key: &[u8; 32]) -> Result<(), String> {
         let hex_key: String = key.iter().map(|b| format!("{:02x}", b)).collect();
         conn.pragma_update(None, "key", format!("x'{}'", hex_key))
-            .map_err(|e| format!("Failed to set encryption key: {}", e))?;
+            .map_err(|e| VaultError::SetEncryptionKey(e.to_string()))?;
 
         conn.execute_batch("SELECT count(*) FROM sqlite_master;")
-            .map_err(|_| "Wrong password or corrupted vault".to_string())?;
+            .map_err(|_| VaultError::WrongPasswordOrCorrupted)?;
 
         Ok(())
     }

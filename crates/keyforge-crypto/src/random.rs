@@ -2,20 +2,25 @@
 
 use rand::RngCore;
 
+use crate::aead;
+
+/// Size of an Argon2 salt in bytes.
+pub const SALT_SIZE: usize = 16;
+
 pub fn generate_bytes(length: usize) -> Vec<u8> {
     let mut bytes = vec![0u8; length];
     rand::thread_rng().fill_bytes(&mut bytes);
     bytes
 }
 
-pub fn generate_salt() -> [u8; 16] {
-    let mut salt = [0u8; 16];
+pub fn generate_salt() -> [u8; SALT_SIZE] {
+    let mut salt = [0u8; SALT_SIZE];
     rand::thread_rng().fill_bytes(&mut salt);
     salt
 }
 
-pub fn generate_nonce() -> [u8; 12] {
-    let mut nonce = [0u8; 12];
+pub fn generate_nonce() -> [u8; aead::NONCE_SIZE] {
+    let mut nonce = [0u8; aead::NONCE_SIZE];
     rand::thread_rng().fill_bytes(&mut nonce);
     nonce
 }
@@ -35,13 +40,13 @@ mod tests {
     #[test]
     fn test_generate_salt_length() {
         let salt = generate_salt();
-        assert_eq!(salt.len(), 16);
+        assert_eq!(salt.len(), SALT_SIZE);
     }
 
     #[test]
     fn test_generate_nonce_length() {
         let nonce = generate_nonce();
-        assert_eq!(nonce.len(), 12);
+        assert_eq!(nonce.len(), aead::NONCE_SIZE);
     }
 
     #[test]

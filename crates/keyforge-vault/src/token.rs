@@ -5,7 +5,9 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use zeroize::Zeroize;
 
+use crate::constants::INITIAL_SORT_ORDER;
 use crate::db::Vault;
+use crate::error::VaultError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Token {
@@ -46,18 +48,18 @@ impl Vault {
         let now = Utc::now().to_rfc3339();
 
         let encrypted_secret = keyforge_crypto::aead::encrypt(&new_token.secret, self.secret_key())
-            .map_err(|e| format!("Failed to encrypt secret: {}", e))?;
+            .map_err(VaultError::EncryptSecret)?;
 
         new_token.secret.zeroize();
 
         let max_sort: i32 = self
             .conn()
             .query_row(
-                "SELECT COALESCE(MAX(sort_order), -1) FROM tokens",
-                [],
+                "SELECT COALESCE(MAX(sort_order), ?1) FROM tokens",
+                rusqlite::params![INITIAL_SORT_ORDER],
                 |row| row.get(0),
             )
-            .unwrap_or(-1);
+            .unwrap_or(INITIAL_SORT_ORDER);
 
         self.conn().execute(
             "INSERT INTO tokens (id, issuer, account, secret_encrypted, algorithm, digits, type, period, counter, icon, sort_order, created_at, updated_at)
@@ -77,7 +79,7 @@ impl Vault {
                 now,
                 now,
             ],
-        ).map_err(|e| format!("Failed to insert token: {}", e))?;
+        ).map_err(|e| VaultError::Query(e.to_string()))?;
 
         Ok(Token {
             id,
@@ -103,7 +105,7 @@ impl Vault {
         let mut stmt = self.conn().prepare(
             "SELECT id, issuer, account, algorithm, digits, type, period, counter, icon, sort_order, created_at, updated_at, last_modified, device_id, sync_version
              FROM tokens ORDER BY sort_order ASC"
-        ).map_err(|e| format!("Failed to prepare query: {}", e))?;
+        ).map_err(|e| VaultError::Query(e.to_string()))?;
 
         let tokens = stmt
             .query_map([], |row| {
@@ -125,11 +127,11 @@ impl Vault {
                     sync_version: row.get(14)?,
                 })
             })
-            .map_err(|e| format!("Failed to query tokens: {}", e))?;
+            .map_err(|e| VaultError::Query(e.to_string()))?;
 
         tokens
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| format!("Failed to collect tokens: {}", e))
+            .map_err(|e| VaultError::Query(e.to_string()).to_string())
     }
 
     /// Get a single token by ID.
@@ -137,7 +139,7 @@ impl Vault {
         let mut stmt = self.conn().prepare(
             "SELECT id, issuer, account, algorithm, digits, type, period, counter, icon, sort_order, created_at, updated_at, last_modified, device_id, sync_version
              FROM tokens WHERE id = ?1"
-        ).map_err(|e| format!("Failed to prepare query: {}", e))?;
+        ).map_err(|e| VaultError::Query(e.to_string()))?;
 
         let mut rows = stmt
             .query_map(rusqlite::params![id], |row| {
@@ -159,11 +161,11 @@ impl Vault {
                     sync_version: row.get(14)?,
                 })
             })
-            .map_err(|e| format!("Failed to query token: {}", e))?;
+            .map_err(|e| VaultError::Query(e.to_string()))?;
 
         match rows.next() {
             Some(Ok(token)) => Ok(Some(token)),
-            Some(Err(e)) => Err(format!("Failed to read token: {}", e)),
+            Some(Err(e)) => Err(VaultError::Query(e.to_string()).to_string()),
             None => Ok(None),
         }
     }
@@ -177,10 +179,10 @@ impl Vault {
                 rusqlite::params![id],
                 |row| row.get(0),
             )
-            .map_err(|e| format!("Token not found: {}", e))?;
+            .map_err(|_| VaultError::TokenNotFound)?;
 
         keyforge_crypto::aead::decrypt(&encrypted, self.secret_key())
-            .map_err(|e| format!("Failed to decrypt secret: {}", e))
+            .map_err(|e| VaultError::DecryptSecret(e).to_string())
     }
 
     /// Update token metadata.
@@ -192,10 +194,10 @@ impl Vault {
                 "UPDATE tokens SET issuer = ?1, account = ?2, updated_at = ?3 WHERE id = ?4",
                 rusqlite::params![issuer, account, now, id],
             )
-            .map_err(|e| format!("Failed to update token: {}", e))?;
+            .map_err(|e| VaultError::Query(e.to_string()))?;
 
         if rows == 0 {
-            return Err("Token not found".to_string());
+            return Err(VaultError::TokenNotFound.to_string());
         }
         Ok(())
     }
@@ -204,7 +206,7 @@ impl Vault {
     pub fn delete_token(&self, id: &str) -> Result<(), String> {
         self.conn()
             .execute("DELETE FROM tokens WHERE id = ?1", rusqlite::params![id])
-            .map_err(|e| format!("Failed to delete token: {}", e))?;
+            .map_err(|e| VaultError::Query(e.to_string()))?;
         Ok(())
     }
 
@@ -213,18 +215,17 @@ impl Vault {
         let tx = self
             .conn()
             .unchecked_transaction()
-            .map_err(|e| format!("Failed to start transaction: {}", e))?;
+            .map_err(|e| VaultError::Query(e.to_string()))?;
 
         for (i, id) in id_order.iter().enumerate() {
             tx.execute(
                 "UPDATE tokens SET sort_order = ?1, updated_at = ?2 WHERE id = ?3",
                 rusqlite::params![i as i32, Utc::now().to_rfc3339(), id],
             )
-            .map_err(|e| format!("Failed to reorder token: {}", e))?;
+            .map_err(|e| VaultError::Query(e.to_string()))?;
         }
 
-        tx.commit()
-            .map_err(|e| format!("Failed to commit reorder: {}", e))?;
+        tx.commit().map_err(|e| VaultError::Query(e.to_string()))?;
         Ok(())
     }
 
@@ -236,7 +237,7 @@ impl Vault {
                 "UPDATE tokens SET counter = counter + 1, updated_at = ?1 WHERE id = ?2",
                 rusqlite::params![now, id],
             )
-            .map_err(|e| format!("Failed to increment counter: {}", e))?;
+            .map_err(|e| VaultError::Query(e.to_string()))?;
 
         let counter: u64 = self
             .conn()
@@ -245,7 +246,7 @@ impl Vault {
                 rusqlite::params![id],
                 |row| row.get(0),
             )
-            .map_err(|e| format!("Token not found: {}", e))?;
+            .map_err(|_| VaultError::TokenNotFound)?;
 
         Ok(counter)
     }

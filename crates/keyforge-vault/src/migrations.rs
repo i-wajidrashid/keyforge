@@ -2,6 +2,9 @@
 
 use rusqlite::Connection;
 
+use crate::constants::SCHEMA_VERSION;
+use crate::error::VaultError;
+
 pub fn run_migrations(conn: &Connection) -> Result<(), String> {
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS migrations (
@@ -9,11 +12,11 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
             applied_at TEXT NOT NULL
         );",
     )
-    .map_err(|e| format!("Failed to create migrations table: {}", e))?;
+    .map_err(|e| VaultError::Migration(e.to_string()))?;
 
     let current_version = get_current_version(conn)?;
 
-    if current_version < 1 {
+    if current_version < SCHEMA_VERSION {
         migrate_v1(conn)?;
     }
 
@@ -26,7 +29,7 @@ fn get_current_version(conn: &Connection) -> Result<i32, String> {
         [],
         |row| row.get(0),
     );
-    version.map_err(|e| format!("Failed to get schema version: {}", e))
+    version.map_err(|e| VaultError::SchemaVersion(e.to_string()).to_string())
 }
 
 fn migrate_v1(conn: &Connection) -> Result<(), String> {
@@ -60,7 +63,7 @@ fn migrate_v1(conn: &Connection) -> Result<(), String> {
         INSERT OR IGNORE INTO vault_meta (key, value) VALUES ('vault_created_at', datetime('now'));
         ",
     )
-    .map_err(|e| format!("Migration v1 failed: {}", e))?;
+    .map_err(|e| VaultError::Migration(e.to_string()))?;
 
     Ok(())
 }
