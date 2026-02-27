@@ -8,6 +8,7 @@
     "build": "tauri build",
     "dev:fe": "vite",
     "build:fe": "vite build",
+    "tauri": "tauri",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
