@@ -25,20 +25,20 @@ pub fn generate(secret: &[u8], counter: u64, digits: u32, algorithm: Algorithm) 
 
     let mut hmac_result = match algorithm {
         Algorithm::SHA1 => {
-            let mut mac = Hmac::<Sha1>::new_from_slice(secret)
-                .expect("HMAC accepts any key length");
+            let mut mac =
+                Hmac::<Sha1>::new_from_slice(secret).expect("HMAC accepts any key length");
             mac.update(&counter_bytes);
             mac.finalize().into_bytes().to_vec()
         }
         Algorithm::SHA256 => {
-            let mut mac = Hmac::<Sha256>::new_from_slice(secret)
-                .expect("HMAC accepts any key length");
+            let mut mac =
+                Hmac::<Sha256>::new_from_slice(secret).expect("HMAC accepts any key length");
             mac.update(&counter_bytes);
             mac.finalize().into_bytes().to_vec()
         }
         Algorithm::SHA512 => {
-            let mut mac = Hmac::<Sha512>::new_from_slice(secret)
-                .expect("HMAC accepts any key length");
+            let mut mac =
+                Hmac::<Sha512>::new_from_slice(secret).expect("HMAC accepts any key length");
             mac.update(&counter_bytes);
             mac.finalize().into_bytes().to_vec()
         }
@@ -69,8 +69,8 @@ mod tests {
     fn test_rfc4226_vectors() {
         let secret = b"12345678901234567890";
         let expected = [
-            "755224", "287082", "359152", "969429", "338314",
-            "254676", "287922", "162583", "399871", "520489",
+            "755224", "287082", "359152", "969429", "338314", "254676", "287922", "162583",
+            "399871", "520489",
         ];
 
         for (counter, expected_code) in expected.iter().enumerate() {

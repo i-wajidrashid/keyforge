@@ -18,12 +18,17 @@ pub fn encrypt(plaintext: &[u8], key: &[u8; 32]) -> Result<Vec<u8>, String> {
 }
 
 /// Encrypt with a specific nonce (for testing)
-pub fn encrypt_with_nonce(plaintext: &[u8], key: &[u8; 32], nonce_bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let cipher = Aes256Gcm::new_from_slice(key)
-        .map_err(|e| format!("Failed to create cipher: {}", e))?;
+pub fn encrypt_with_nonce(
+    plaintext: &[u8],
+    key: &[u8; 32],
+    nonce_bytes: &[u8],
+) -> Result<Vec<u8>, String> {
+    let cipher =
+        Aes256Gcm::new_from_slice(key).map_err(|e| format!("Failed to create cipher: {}", e))?;
 
     let nonce = Nonce::from_slice(nonce_bytes);
-    let ciphertext = cipher.encrypt(nonce, plaintext)
+    let ciphertext = cipher
+        .encrypt(nonce, plaintext)
         .map_err(|e| format!("Encryption failed: {}", e))?;
 
     // Output format: [nonce][ciphertext+tag]
@@ -44,11 +49,12 @@ pub fn decrypt(encrypted: &[u8], key: &[u8; 32]) -> Result<Vec<u8>, String> {
 
     let (nonce_bytes, ciphertext) = encrypted.split_at(NONCE_SIZE);
 
-    let cipher = Aes256Gcm::new_from_slice(key)
-        .map_err(|e| format!("Failed to create cipher: {}", e))?;
+    let cipher =
+        Aes256Gcm::new_from_slice(key).map_err(|e| format!("Failed to create cipher: {}", e))?;
 
     let nonce = Nonce::from_slice(nonce_bytes);
-    let plaintext = cipher.decrypt(nonce, ciphertext)
+    let plaintext = cipher
+        .decrypt(nonce, ciphertext)
         .map_err(|_| "Decryption failed: authentication error".to_string())?;
 
     Ok(plaintext)

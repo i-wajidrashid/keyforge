@@ -1,6 +1,6 @@
 //! Key derivation using Argon2id
 
-use argon2::{Argon2, Algorithm, Version, Params};
+use argon2::{Algorithm, Argon2, Params, Version};
 
 /// Default Argon2id parameters per SECURITY.md
 pub const DEFAULT_MEMORY_KIB: u32 = 65536; // 64 MiB
@@ -35,18 +35,24 @@ impl Default for KdfParams {
 ///
 /// # Returns
 /// 32-byte derived key
-pub fn derive_key(password: &[u8], salt: &[u8; 16], params: &KdfParams) -> Result<[u8; KEY_LENGTH], String> {
+pub fn derive_key(
+    password: &[u8],
+    salt: &[u8; 16],
+    params: &KdfParams,
+) -> Result<[u8; KEY_LENGTH], String> {
     let argon2_params = Params::new(
         params.memory_kib,
         params.time_cost,
         params.parallelism,
         Some(KEY_LENGTH),
-    ).map_err(|e| format!("Invalid Argon2id params: {}", e))?;
+    )
+    .map_err(|e| format!("Invalid Argon2id params: {}", e))?;
 
     let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, argon2_params);
 
     let mut output = [0u8; KEY_LENGTH];
-    argon2.hash_password_into(password, salt, &mut output)
+    argon2
+        .hash_password_into(password, salt, &mut output)
         .map_err(|e| format!("Argon2id derivation failed: {}", e))?;
 
     Ok(output)

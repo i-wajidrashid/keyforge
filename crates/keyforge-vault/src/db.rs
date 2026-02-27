@@ -13,9 +13,12 @@ pub struct Vault {
 
 impl Vault {
     /// Create a new vault database
-    pub fn create(path: &str, sqlcipher_key: &[u8; 32], secret_key: [u8; 32]) -> Result<Self, String> {
-        let conn = Connection::open(path)
-            .map_err(|e| format!("Failed to create vault: {}", e))?;
+    pub fn create(
+        path: &str,
+        sqlcipher_key: &[u8; 32],
+        secret_key: [u8; 32],
+    ) -> Result<Self, String> {
+        let conn = Connection::open(path).map_err(|e| format!("Failed to create vault: {}", e))?;
 
         Self::set_key(&conn, sqlcipher_key)?;
 
@@ -26,9 +29,12 @@ impl Vault {
     }
 
     /// Open an existing vault database
-    pub fn open(path: &str, sqlcipher_key: &[u8; 32], secret_key: [u8; 32]) -> Result<Self, String> {
-        let conn = Connection::open(path)
-            .map_err(|e| format!("Failed to open vault: {}", e))?;
+    pub fn open(
+        path: &str,
+        sqlcipher_key: &[u8; 32],
+        secret_key: [u8; 32],
+    ) -> Result<Self, String> {
+        let conn = Connection::open(path).map_err(|e| format!("Failed to open vault: {}", e))?;
 
         Self::set_key(&conn, sqlcipher_key)?;
 
@@ -41,7 +47,7 @@ impl Vault {
     fn set_key(conn: &Connection, key: &[u8; 32]) -> Result<(), String> {
         // Format key as hex string for SQLCipher PRAGMA
         let hex_key: String = key.iter().map(|b| format!("{:02x}", b)).collect();
-        conn.pragma_update(None, "key", &format!("x'{}'", hex_key))
+        conn.pragma_update(None, "key", format!("x'{}'", hex_key))
             .map_err(|e| format!("Failed to set encryption key: {}", e))?;
 
         // Verify the database is accessible

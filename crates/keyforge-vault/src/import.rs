@@ -29,8 +29,8 @@ impl Vault {
         let key = keyforge_crypto::kdf::derive_key(password, &salt, &params)?;
         let json = keyforge_crypto::aead::decrypt(encrypted, &key)?;
 
-        let uris: Vec<String> = serde_json::from_slice(&json)
-            .map_err(|e| format!("Failed to parse export: {}", e))?;
+        let uris: Vec<String> =
+            serde_json::from_slice(&json).map_err(|e| format!("Failed to parse export: {}", e))?;
 
         self.import_uris(&uris)
     }
@@ -43,7 +43,8 @@ pub fn parse_otpauth_uri(uri: &str) -> Result<Option<NewToken>, String> {
     }
 
     let without_scheme = &uri[10..]; // Remove "otpauth://"
-    let (token_type, rest) = without_scheme.split_once('/')
+    let (token_type, rest) = without_scheme
+        .split_once('/')
         .ok_or_else(|| "Missing token type in URI".to_string())?;
 
     let token_type = match token_type {
@@ -52,7 +53,8 @@ pub fn parse_otpauth_uri(uri: &str) -> Result<Option<NewToken>, String> {
         _ => return Err(format!("Unknown token type: {}", token_type)),
     };
 
-    let (label, query) = rest.split_once('?')
+    let (label, query) = rest
+        .split_once('?')
         .ok_or_else(|| "Missing query parameters in URI".to_string())?;
 
     // Parse label (issuer:account or just account)
@@ -72,30 +74,39 @@ pub fn parse_otpauth_uri(uri: &str) -> Result<Option<NewToken>, String> {
         })
         .collect();
 
-    let secret_b32 = params.get("secret")
+    let secret_b32 = params
+        .get("secret")
         .ok_or_else(|| "Missing secret parameter".to_string())?;
 
-    let secret = base32::decode(base32::Alphabet::Rfc4648 { padding: false }, &secret_b32.to_uppercase())
-        .ok_or_else(|| "Invalid base32 secret".to_string())?;
+    let secret = base32::decode(
+        base32::Alphabet::Rfc4648 { padding: false },
+        &secret_b32.to_uppercase(),
+    )
+    .ok_or_else(|| "Invalid base32 secret".to_string())?;
 
-    let issuer = params.get("issuer")
+    let issuer = params
+        .get("issuer")
         .map(|s| s.to_string())
         .or(issuer_from_label)
         .unwrap_or_else(|| "Unknown".to_string());
 
-    let algorithm = params.get("algorithm")
+    let algorithm = params
+        .get("algorithm")
         .map(|s| s.to_uppercase())
         .unwrap_or_else(|| "SHA1".to_string());
 
-    let digits: u32 = params.get("digits")
+    let digits: u32 = params
+        .get("digits")
         .and_then(|s| s.parse().ok())
         .unwrap_or(6);
 
-    let period: u32 = params.get("period")
+    let period: u32 = params
+        .get("period")
         .and_then(|s| s.parse().ok())
         .unwrap_or(30);
 
-    let counter: u64 = params.get("counter")
+    let counter: u64 = params
+        .get("counter")
         .and_then(|s| s.parse().ok())
         .unwrap_or(0);
 
@@ -119,10 +130,7 @@ fn urlencoding_decode(s: &str) -> String {
         if b == b'%' {
             let hex: Vec<u8> = chars.by_ref().take(2).copied().collect();
             if hex.len() == 2 {
-                if let Ok(byte) = u8::from_str_radix(
-                    &String::from_utf8_lossy(&hex),
-                    16,
-                ) {
+                if let Ok(byte) = u8::from_str_radix(&String::from_utf8_lossy(&hex), 16) {
                     bytes.push(byte);
                 }
             }

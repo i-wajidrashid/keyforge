@@ -32,8 +32,7 @@ impl Vault {
     /// Export all tokens as encrypted JSON blob
     pub fn export_encrypted(&self, export_password: &[u8]) -> Result<Vec<u8>, String> {
         let uris = self.export_uris()?;
-        let json = serde_json::to_vec(&uris)
-            .map_err(|e| format!("Failed to serialize: {}", e))?;
+        let json = serde_json::to_vec(&uris).map_err(|e| format!("Failed to serialize: {}", e))?;
 
         let salt = keyforge_crypto::random::generate_salt();
         let params = keyforge_crypto::kdf::KdfParams::default();

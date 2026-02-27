@@ -12,7 +12,13 @@ pub use hotp::Algorithm;
 /// * `period` - Time step in seconds (typically 30)
 /// * `digits` - Number of digits (6 or 8)
 /// * `algorithm` - The HMAC algorithm to use
-pub fn generate(secret: &[u8], time: u64, period: u64, digits: u32, algorithm: Algorithm) -> String {
+pub fn generate(
+    secret: &[u8],
+    time: u64,
+    period: u64,
+    digits: u32,
+    algorithm: Algorithm,
+) -> String {
     let counter = time / period;
     hotp::generate(secret, counter, digits, algorithm)
 }

@@ -8,8 +8,9 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
         "CREATE TABLE IF NOT EXISTS migrations (
             version INTEGER PRIMARY KEY,
             applied_at TEXT NOT NULL
-        );"
-    ).map_err(|e| format!("Failed to create migrations table: {}", e))?;
+        );",
+    )
+    .map_err(|e| format!("Failed to create migrations table: {}", e))?;
 
     let current_version = get_current_version(conn)?;
 
@@ -58,8 +59,9 @@ fn migrate_v1(conn: &Connection) -> Result<(), String> {
         INSERT OR IGNORE INTO migrations (version, applied_at) VALUES (1, datetime('now'));
         INSERT OR IGNORE INTO vault_meta (key, value) VALUES ('schema_version', '1');
         INSERT OR IGNORE INTO vault_meta (key, value) VALUES ('vault_created_at', datetime('now'));
-        "
-    ).map_err(|e| format!("Migration v1 failed: {}", e))?;
+        ",
+    )
+    .map_err(|e| format!("Migration v1 failed: {}", e))?;
 
     Ok(())
 }
@@ -98,19 +100,23 @@ mod tests {
         run_migrations(&conn).unwrap();
 
         // Verify tokens table exists
-        let count: i32 = conn.query_row(
-            "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='tokens'",
-            [],
-            |row| row.get(0),
-        ).unwrap();
+        let count: i32 = conn
+            .query_row(
+                "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='tokens'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
         assert_eq!(count, 1);
 
         // Verify vault_meta table exists
-        let count: i32 = conn.query_row(
-            "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='vault_meta'",
-            [],
-            |row| row.get(0),
-        ).unwrap();
+        let count: i32 = conn
+            .query_row(
+                "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='vault_meta'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
         assert_eq!(count, 1);
     }
 }

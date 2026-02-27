@@ -59,7 +59,10 @@ mod tests {
                 break;
             }
         }
-        assert!(!all_same, "100 consecutive random generations should not all be identical");
+        assert!(
+            !all_same,
+            "100 consecutive random generations should not all be identical"
+        );
     }
 
     #[test]

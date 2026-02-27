@@ -94,17 +94,19 @@ fn test_get_nonexistent_token() {
 fn test_token_secret_roundtrip() {
     let (vault, _dir) = create_test_vault();
     let secret = b"12345678901234567890";
-    let token = vault.add_token(NewToken {
-        issuer: "Test".to_string(),
-        account: "user".to_string(),
-        secret: secret.to_vec(),
-        algorithm: "SHA1".to_string(),
-        digits: 6,
-        token_type: "totp".to_string(),
-        period: 30,
-        counter: 0,
-        icon: None,
-    }).unwrap();
+    let token = vault
+        .add_token(NewToken {
+            issuer: "Test".to_string(),
+            account: "user".to_string(),
+            secret: secret.to_vec(),
+            algorithm: "SHA1".to_string(),
+            digits: 6,
+            token_type: "totp".to_string(),
+            period: 30,
+            counter: 0,
+            icon: None,
+        })
+        .unwrap();
 
     let decrypted = vault.get_token_secret(&token.id).unwrap();
     assert_eq!(decrypted, secret);
@@ -115,7 +117,9 @@ fn test_update_token() {
     let (vault, _dir) = create_test_vault();
     let token = vault.add_token(test_token("GitHub")).unwrap();
 
-    vault.update_token(&token.id, "GitLab", "new@example.com").unwrap();
+    vault
+        .update_token(&token.id, "GitLab", "new@example.com")
+        .unwrap();
 
     let updated = vault.get_token(&token.id).unwrap().unwrap();
     assert_eq!(updated.issuer, "GitLab");
@@ -147,7 +151,9 @@ fn test_reorder_tokens() {
     let t3 = vault.add_token(test_token("Third")).unwrap();
 
     // Reverse the order
-    vault.reorder_tokens(&[t3.id.clone(), t2.id.clone(), t1.id.clone()]).unwrap();
+    vault
+        .reorder_tokens(&[t3.id.clone(), t2.id.clone(), t1.id.clone()])
+        .unwrap();
 
     let tokens = vault.list_tokens().unwrap();
     assert_eq!(tokens[0].issuer, "Third");
@@ -158,17 +164,19 @@ fn test_reorder_tokens() {
 #[test]
 fn test_increment_counter() {
     let (vault, _dir) = create_test_vault();
-    let token = vault.add_token(NewToken {
-        token_type: "hotp".to_string(),
-        counter: 0,
-        issuer: "HOTP Test".to_string(),
-        account: "test@example.com".to_string(),
-        secret: b"12345678901234567890".to_vec(),
-        algorithm: "SHA1".to_string(),
-        digits: 6,
-        period: 30,
-        icon: None,
-    }).unwrap();
+    let token = vault
+        .add_token(NewToken {
+            token_type: "hotp".to_string(),
+            counter: 0,
+            issuer: "HOTP Test".to_string(),
+            account: "test@example.com".to_string(),
+            secret: b"12345678901234567890".to_vec(),
+            algorithm: "SHA1".to_string(),
+            digits: 6,
+            period: 30,
+            icon: None,
+        })
+        .unwrap();
 
     let counter = vault.increment_counter(&token.id).unwrap();
     assert_eq!(counter, 1);
@@ -202,17 +210,19 @@ fn test_full_roundtrip() {
     let token_id;
     {
         let vault = Vault::create(path.to_str().unwrap(), &sqlcipher_key, secret_key).unwrap();
-        let token = vault.add_token(NewToken {
-            issuer: "GitHub".to_string(),
-            account: "user@test.com".to_string(),
-            secret: secret.to_vec(),
-            algorithm: "SHA1".to_string(),
-            digits: 6,
-            token_type: "totp".to_string(),
-            period: 30,
-            counter: 0,
-            icon: None,
-        }).unwrap();
+        let token = vault
+            .add_token(NewToken {
+                issuer: "GitHub".to_string(),
+                account: "user@test.com".to_string(),
+                secret: secret.to_vec(),
+                algorithm: "SHA1".to_string(),
+                digits: 6,
+                token_type: "totp".to_string(),
+                period: 30,
+                counter: 0,
+                icon: None,
+            })
+            .unwrap();
         token_id = token.id;
     }
 
@@ -227,7 +237,13 @@ fn test_full_roundtrip() {
         assert_eq!(decrypted, secret);
 
         // Generate a code to verify
-        let code = keyforge_crypto::totp::generate(&decrypted, 59, 30, 6, keyforge_crypto::hotp::Algorithm::SHA1);
+        let code = keyforge_crypto::totp::generate(
+            &decrypted,
+            59,
+            30,
+            6,
+            keyforge_crypto::hotp::Algorithm::SHA1,
+        );
         assert_eq!(code, "287082");
     }
 }

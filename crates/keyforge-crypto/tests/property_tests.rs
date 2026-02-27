@@ -1,6 +1,6 @@
-use proptest::prelude::*;
-use keyforge_crypto::{totp, hotp, aead};
 use keyforge_crypto::hotp::Algorithm;
+use keyforge_crypto::{aead, hotp, totp};
+use proptest::prelude::*;
 
 proptest! {
     #[test]
