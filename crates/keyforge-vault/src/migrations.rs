@@ -29,7 +29,7 @@ fn get_current_version(conn: &Connection) -> Result<i32, String> {
         [],
         |row| row.get(0),
     );
-    version.map_err(|e| VaultError::SchemaVersion(e.to_string()).to_string())
+    version.map_err(|e| -> String { VaultError::SchemaVersion(e.to_string()).into() })
 }
 
 fn migrate_v1(conn: &Connection) -> Result<(), String> {

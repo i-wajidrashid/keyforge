@@ -20,7 +20,7 @@ export const OTPAUTH_SCHEME = 'otpauth://';
 export const COUNTER_BYTE_LENGTH = 8;
 
 /** Web Crypto algorithm name mapping from OTP algorithm identifiers. */
-export const HASH_ALGORITHM_MAP: Record<string, string> = {
+export const HASH_ALGORITHM_MAP = {
   SHA1: 'SHA-1',
   SHA256: 'SHA-256',
   SHA512: 'SHA-512',

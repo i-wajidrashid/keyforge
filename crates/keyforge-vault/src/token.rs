@@ -131,7 +131,7 @@ impl Vault {
 
         tokens
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| VaultError::Query(e.to_string()).to_string())
+            .map_err(|e| -> String { VaultError::Query(e.to_string()).into() })
     }
 
     /// Get a single token by ID.
@@ -165,7 +165,7 @@ impl Vault {
 
         match rows.next() {
             Some(Ok(token)) => Ok(Some(token)),
-            Some(Err(e)) => Err(VaultError::Query(e.to_string()).to_string()),
+            Some(Err(e)) => Err(VaultError::Query(e.to_string()).into()),
             None => Ok(None),
         }
     }
@@ -182,7 +182,7 @@ impl Vault {
             .map_err(|_| VaultError::TokenNotFound)?;
 
         keyforge_crypto::aead::decrypt(&encrypted, self.secret_key())
-            .map_err(|e| VaultError::DecryptSecret(e).to_string())
+            .map_err(|e| -> String { VaultError::DecryptSecret(e).into() })
     }
 
     /// Update token metadata.
