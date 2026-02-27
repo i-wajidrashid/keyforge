@@ -1,5 +1,16 @@
 import type { Token, Algorithm, TokenType } from '@keyforge/shared';
-import { base32Decode } from '@keyforge/shared';
+import {
+  base32Decode,
+  OTPAUTH_SCHEME,
+  DEFAULT_ALGORITHM,
+  DEFAULT_DIGITS,
+  DEFAULT_PERIOD,
+  DEFAULT_COUNTER,
+  DEFAULT_ISSUER,
+  ERR_INVALID_OTPAUTH_URI,
+  ERR_UNKNOWN_TOKEN_TYPE,
+  ERR_MISSING_SECRET,
+} from '@keyforge/shared';
 
 export interface ParsedOtpUri {
   type: TokenType;
@@ -15,15 +26,15 @@ export interface ParsedOtpUri {
 
 /** Parse an otpauth:// URI into its component parts. */
 export function parseOtpUri(uri: string): ParsedOtpUri {
-  if (!uri.startsWith('otpauth://')) {
-    throw new Error('Invalid otpauth URI: must start with otpauth://');
+  if (!uri.startsWith(OTPAUTH_SCHEME)) {
+    throw new Error(ERR_INVALID_OTPAUTH_URI);
   }
 
   const url = new URL(uri);
   const type = url.hostname as TokenType;
 
   if (type !== 'totp' && type !== 'hotp') {
-    throw new Error(`Unknown token type: ${type}`);
+    throw new Error(ERR_UNKNOWN_TOKEN_TYPE(type));
   }
 
   // Parse label
@@ -42,17 +53,17 @@ export function parseOtpUri(uri: string): ParsedOtpUri {
   // Extract params
   const secretParam = url.searchParams.get('secret');
   if (!secretParam) {
-    throw new Error('Missing secret parameter');
+    throw new Error(ERR_MISSING_SECRET);
   }
 
   const secretBase32 = secretParam.toUpperCase();
   const secret = base32Decode(secretBase32);
 
-  const issuer = url.searchParams.get('issuer') || issuerFromLabel || 'Unknown';
-  const algorithm = (url.searchParams.get('algorithm')?.toUpperCase() || 'SHA1') as Algorithm;
-  const digits = parseInt(url.searchParams.get('digits') || '6', 10);
-  const period = parseInt(url.searchParams.get('period') || '30', 10);
-  const counter = parseInt(url.searchParams.get('counter') || '0', 10);
+  const issuer = url.searchParams.get('issuer') || issuerFromLabel || DEFAULT_ISSUER;
+  const algorithm = (url.searchParams.get('algorithm')?.toUpperCase() || DEFAULT_ALGORITHM) as Algorithm;
+  const digits = parseInt(url.searchParams.get('digits') || String(DEFAULT_DIGITS), 10);
+  const period = parseInt(url.searchParams.get('period') || String(DEFAULT_PERIOD), 10);
+  const counter = parseInt(url.searchParams.get('counter') || String(DEFAULT_COUNTER), 10);
 
   return {
     type,

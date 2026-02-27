@@ -1,3 +1,5 @@
+import { DEFAULT_AUTO_LOCK_TIMEOUT, DEFAULT_CLIPBOARD_CLEAR_TIMEOUT } from '../constants/defaults';
+
 export interface Settings {
   autoLockTimeout: number;
   clipboardClearTimeout: number;
@@ -8,8 +10,8 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  autoLockTimeout: 60,
-  clipboardClearTimeout: 30,
+  autoLockTimeout: DEFAULT_AUTO_LOCK_TIMEOUT,
+  clipboardClearTimeout: DEFAULT_CLIPBOARD_CLEAR_TIMEOUT,
   biometricEnabled: false,
   compactMode: false,
   lockOnMinimize: true,

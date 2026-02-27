@@ -1,3 +1,5 @@
+import { ERR_INVALID_BASE32_CHAR } from '../constants/errors';
+
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
 /** Decode a Base32 string into bytes (strips spaces, dashes, padding). */
@@ -10,7 +12,7 @@ export function base32Decode(input: string): Uint8Array {
 
   for (const c of cleaned) {
     if (!ALPHABET.includes(c)) {
-      throw new Error(`Invalid base32 character: ${c}`);
+      throw new Error(ERR_INVALID_BASE32_CHAR(c));
     }
   }
 

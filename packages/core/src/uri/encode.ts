@@ -1,5 +1,12 @@
 import type { Algorithm, TokenType } from '@keyforge/shared';
-import { base32Encode } from '@keyforge/shared';
+import {
+  base32Encode,
+  OTPAUTH_SCHEME,
+  DEFAULT_ALGORITHM,
+  DEFAULT_DIGITS,
+  DEFAULT_PERIOD,
+  DEFAULT_COUNTER,
+} from '@keyforge/shared';
 
 export interface OtpUriParams {
   type: TokenType;
@@ -21,18 +28,18 @@ export function encodeOtpUri(params: OtpUriParams): string {
   searchParams.set('secret', secretBase32);
   searchParams.set('issuer', params.issuer);
 
-  if (params.algorithm && params.algorithm !== 'SHA1') {
+  if (params.algorithm && params.algorithm !== DEFAULT_ALGORITHM) {
     searchParams.set('algorithm', params.algorithm);
   }
-  if (params.digits && params.digits !== 6) {
+  if (params.digits && params.digits !== DEFAULT_DIGITS) {
     searchParams.set('digits', params.digits.toString());
   }
-  if (params.type === 'totp' && params.period && params.period !== 30) {
+  if (params.type === 'totp' && params.period && params.period !== DEFAULT_PERIOD) {
     searchParams.set('period', params.period.toString());
   }
   if (params.type === 'hotp') {
-    searchParams.set('counter', (params.counter ?? 0).toString());
+    searchParams.set('counter', (params.counter ?? DEFAULT_COUNTER).toString());
   }
 
-  return `otpauth://${params.type}/${label}?${searchParams.toString()}`;
+  return `${OTPAUTH_SCHEME}${params.type}/${label}?${searchParams.toString()}`;
 }

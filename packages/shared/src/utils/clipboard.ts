@@ -1,4 +1,4 @@
-const CLEAR_DELAY_MS = 30_000; // 30s default
+import { DEFAULT_CLIPBOARD_CLEAR_MS } from '../constants/defaults';
 
 let clearTimerId: ReturnType<typeof setTimeout> | null = null;
 
@@ -7,12 +7,12 @@ let clearTimerId: ReturnType<typeof setTimeout> | null = null;
  *
  * @param text  - The value to write (e.g. an OTP code).
  * @param clearAfterMs - Time in ms after which the clipboard is wiped
- *                        (defaults to 30 000 ms / 30 s).
+ *                        (defaults to DEFAULT_CLIPBOARD_CLEAR_MS).
  * @returns `true` if the write succeeded.
  */
 export async function copyToClipboard(
   text: string,
-  clearAfterMs: number = CLEAR_DELAY_MS,
+  clearAfterMs: number = DEFAULT_CLIPBOARD_CLEAR_MS,
 ): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
@@ -31,7 +31,7 @@ export async function clearClipboard(): Promise<void> {
   try {
     await navigator.clipboard.writeText('');
   } catch {
-    // Silently ignore — clipboard may not be available.
+    // Clipboard API may not be available in all contexts (e.g. non-secure origins).
   }
 }
 

@@ -1,4 +1,5 @@
 import type { Algorithm } from '@keyforge/shared';
+import { MS_PER_SECOND, TIMER_INTERVAL_MS } from '@keyforge/shared';
 import { generateTOTP } from '../totp/generate';
 
 export interface TotpTickState {
@@ -33,7 +34,7 @@ export function startTotpTimer(
   async function update() {
     if (stopped) return;
 
-    const now = Math.floor(Date.now() / 1000);
+    const now = Math.floor(Date.now() / MS_PER_SECOND);
     const counter = Math.floor(now / period);
     const secondsLeft = period - (now % period);
 
@@ -50,7 +51,7 @@ export function startTotpTimer(
   // Fire the initial tick, then start the interval
   update().then(() => {
     if (!stopped) {
-      timerId = setInterval(update, 1000);
+      timerId = setInterval(update, TIMER_INTERVAL_MS);
     }
   });
 

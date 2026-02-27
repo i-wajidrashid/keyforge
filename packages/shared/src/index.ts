@@ -5,6 +5,7 @@ export * from './types/platform';
 export * from './constants/defaults';
 export * from './constants/limits';
 export * from './constants/algorithms';
+export * from './constants/errors';
 export * from './utils/formatCode';
 export * from './utils/timeLeft';
 export * from './utils/base32';

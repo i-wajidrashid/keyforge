@@ -1,4 +1,5 @@
 import type { Algorithm } from '@keyforge/shared';
+import { COUNTER_BYTE_LENGTH, HASH_ALGORITHM_MAP } from '@keyforge/shared';
 
 /** Generate an HOTP code using Web Crypto API (Chrome extension fallback). */
 export async function generateHOTP(
@@ -7,7 +8,7 @@ export async function generateHOTP(
   digits: number,
   algorithm: Algorithm
 ): Promise<string> {
-  const hashAlgorithm = getHashAlgorithm(algorithm);
+  const hashAlgorithm = HASH_ALGORITHM_MAP[algorithm] ?? HASH_ALGORITHM_MAP.SHA1;
 
   const keyData = new Uint8Array(secret).buffer;
   const key = await crypto.subtle.importKey(
@@ -18,7 +19,7 @@ export async function generateHOTP(
     ['sign']
   );
 
-  const counterBuffer = new ArrayBuffer(8);
+  const counterBuffer = new ArrayBuffer(COUNTER_BYTE_LENGTH);
   const counterView = new DataView(counterBuffer);
   counterView.setBigUint64(0, BigInt(counter));
 
@@ -26,6 +27,7 @@ export async function generateHOTP(
     await crypto.subtle.sign('HMAC', key, counterBuffer)
   );
 
+  // Dynamic truncation (RFC 4226 §5.4)
   const offset = hmacResult[hmacResult.length - 1] & 0x0f;
   const binary =
     ((hmacResult[offset] & 0x7f) << 24) |
@@ -35,13 +37,4 @@ export async function generateHOTP(
 
   const otp = binary % Math.pow(10, digits);
   return otp.toString().padStart(digits, '0');
-}
-
-function getHashAlgorithm(algorithm: Algorithm): string {
-  switch (algorithm) {
-    case 'SHA1': return 'SHA-1';
-    case 'SHA256': return 'SHA-256';
-    case 'SHA512': return 'SHA-512';
-    default: return 'SHA-1';
-  }
 }
