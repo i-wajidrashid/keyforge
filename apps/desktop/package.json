@@ -1,0 +1,24 @@
+{
+  "name": "@keyforge/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "dev:fe": "vite",
+    "build:fe": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@keyforge/ui": "workspace:*",
+    "@keyforge/core": "workspace:*",
+    "@keyforge/shared": "workspace:*",
+    "@tauri-apps/api": "^2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "vite": "^6",
+    "typescript": "^5.5.0"
+  }
+}

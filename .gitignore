@@ -38,3 +38,8 @@ Thumbs.db
 *.aab
 *.ipa
 *.zip
+
+# Tauri
+**/gen/
+**/WixTools/
+**/src-tauri/target/
