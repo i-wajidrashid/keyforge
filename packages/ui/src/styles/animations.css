@@ -1,0 +1,91 @@
+/* Copy flash animation */
+@keyframes copyFlash {
+  0% { background-color: var(--color-surface-raised); }
+  50% { background-color: var(--color-surface-hover); }
+  100% { background-color: var(--color-surface-raised); }
+}
+
+/* Toast slide up */
+@keyframes toastSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Toast slide down (dismiss) */
+@keyframes toastSlideDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* Code refresh fade */
+@keyframes codeFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes codeFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Delete slide left */
+@keyframes deleteSlide {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+    max-height: 100px;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+    max-height: 0;
+  }
+}
+
+/* Wrong password shake */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+/* Animation utility classes */
+.animate-copy-flash {
+  animation: copyFlash var(--transition-normal);
+}
+
+.animate-toast-in {
+  animation: toastSlideUp var(--transition-normal) ease-out;
+}
+
+.animate-toast-out {
+  animation: toastSlideDown var(--transition-normal) ease-in;
+}
+
+.animate-code-fade-out {
+  animation: codeFadeOut var(--transition-fast) ease-in;
+}
+
+.animate-code-fade-in {
+  animation: codeFadeIn var(--transition-fast) ease-out;
+}
+
+.animate-delete {
+  animation: deleteSlide var(--transition-normal) ease-in forwards;
+}
+
+.animate-shake {
+  animation: shake var(--transition-slow) ease-in-out;
+}
