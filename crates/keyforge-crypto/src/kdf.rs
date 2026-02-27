@@ -2,6 +2,8 @@
 
 use argon2::{Algorithm, Argon2, Params, Version};
 
+use crate::error::CryptoError;
+
 pub const DEFAULT_MEMORY_KIB: u32 = 65536; // 64 MiB
 pub const DEFAULT_TIME_COST: u32 = 3;
 pub const DEFAULT_PARALLELISM: u32 = 4;
@@ -36,14 +38,14 @@ pub fn derive_key(
         params.parallelism,
         Some(KEY_LENGTH),
     )
-    .map_err(|e| format!("Invalid Argon2id params: {}", e))?;
+    .map_err(|e| CryptoError::InvalidKdfParams(e.to_string()))?;
 
     let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, argon2_params);
 
     let mut output = [0u8; KEY_LENGTH];
     argon2
         .hash_password_into(password, salt, &mut output)
-        .map_err(|e| format!("Argon2id derivation failed: {}", e))?;
+        .map_err(|e| CryptoError::KdfDerivation(e.to_string()))?;
 
     Ok(output)
 }

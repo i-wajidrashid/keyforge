@@ -1,5 +1,6 @@
 //! Token export
 
+use crate::constants::OTPAUTH_SCHEME;
 use crate::db::Vault;
 use crate::error::VaultError;
 
@@ -14,7 +15,8 @@ impl Vault {
             let secret_b32 = base32::encode(base32::Alphabet::Rfc4648 { padding: false }, &secret);
 
             let uri = format!(
-                "otpauth://{}/{}:{}?secret={}&algorithm={}&digits={}&period={}&counter={}",
+                "{}{}/{}:{}?secret={}&algorithm={}&digits={}&period={}&counter={}",
+                OTPAUTH_SCHEME,
                 token.token_type,
                 urlencoding_encode(&token.issuer),
                 urlencoding_encode(&token.account),

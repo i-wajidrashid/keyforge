@@ -5,6 +5,8 @@ use aes_gcm::{
     Aes256Gcm, Nonce,
 };
 
+use crate::error::CryptoError;
+
 pub const NONCE_SIZE: usize = 12;
 pub const TAG_SIZE: usize = 16;
 
@@ -21,12 +23,12 @@ pub fn encrypt_with_nonce(
     nonce_bytes: &[u8],
 ) -> Result<Vec<u8>, String> {
     let cipher =
-        Aes256Gcm::new_from_slice(key).map_err(|e| format!("Failed to create cipher: {}", e))?;
+        Aes256Gcm::new_from_slice(key).map_err(|e| CryptoError::CipherInit(e.to_string()))?;
 
     let nonce = Nonce::from_slice(nonce_bytes);
     let ciphertext = cipher
         .encrypt(nonce, plaintext)
-        .map_err(|e| format!("Encryption failed: {}", e))?;
+        .map_err(|e| CryptoError::Encryption(e.to_string()))?;
 
     // [nonce][ciphertext+tag]
     let mut output = Vec::with_capacity(NONCE_SIZE + ciphertext.len());
@@ -39,18 +41,18 @@ pub fn encrypt_with_nonce(
 /// Decrypt ciphertext produced by `encrypt`. Input: `[nonce ‖ ciphertext ‖ tag]`.
 pub fn decrypt(encrypted: &[u8], key: &[u8; 32]) -> Result<Vec<u8>, String> {
     if encrypted.len() < NONCE_SIZE + TAG_SIZE {
-        return Err("Ciphertext too short".to_string());
+        return Err(CryptoError::CiphertextTooShort.into());
     }
 
     let (nonce_bytes, ciphertext) = encrypted.split_at(NONCE_SIZE);
 
     let cipher =
-        Aes256Gcm::new_from_slice(key).map_err(|e| format!("Failed to create cipher: {}", e))?;
+        Aes256Gcm::new_from_slice(key).map_err(|e| CryptoError::CipherInit(e.to_string()))?;
 
     let nonce = Nonce::from_slice(nonce_bytes);
     let plaintext = cipher
         .decrypt(nonce, ciphertext)
-        .map_err(|_| "Decryption failed: authentication error".to_string())?;
+        .map_err(|_| CryptoError::DecryptionAuth)?;
 
     Ok(plaintext)
 }
