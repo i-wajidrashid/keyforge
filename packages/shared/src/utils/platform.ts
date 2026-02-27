@@ -12,7 +12,9 @@ export function detectPlatform(): Platform {
     return 'tauri-desktop';
   }
 
-  if (typeof chrome !== 'undefined' && chrome?.runtime?.id) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chromeGlobal = typeof globalThis !== 'undefined' ? (globalThis as any).chrome : undefined;
+  if (chromeGlobal?.runtime?.id) {
     return 'extension';
   }
 

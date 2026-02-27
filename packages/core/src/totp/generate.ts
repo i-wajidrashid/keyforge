@@ -27,9 +27,10 @@ async function generateHOTPCode(
   const hashAlgorithm = getHashAlgorithm(algorithm);
 
   // Import key for HMAC
+  const keyData = new Uint8Array(secret).buffer;
   const key = await crypto.subtle.importKey(
     'raw',
-    secret,
+    keyData as ArrayBuffer,
     { name: 'HMAC', hash: hashAlgorithm },
     false,
     ['sign']

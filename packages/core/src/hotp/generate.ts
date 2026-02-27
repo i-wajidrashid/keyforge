@@ -12,9 +12,10 @@ export async function generateHOTP(
 ): Promise<string> {
   const hashAlgorithm = getHashAlgorithm(algorithm);
 
+  const keyData = new Uint8Array(secret).buffer;
   const key = await crypto.subtle.importKey(
     'raw',
-    secret,
+    keyData as ArrayBuffer,
     { name: 'HMAC', hash: hashAlgorithm },
     false,
     ['sign']
