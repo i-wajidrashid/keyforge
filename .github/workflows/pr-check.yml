@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   lint:
     name: Lint
@@ -23,6 +26,8 @@ jobs:
           components: clippy, rustfmt
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: keyforge-rust
 
       - uses: pnpm/action-setup@v4
 
@@ -52,6 +57,8 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: keyforge-rust
 
       - name: Install system deps
         run: sudo apt-get update && sudo apt-get install -y libclang-dev
@@ -86,8 +93,22 @@ jobs:
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: keyforge-rust
+
+      - name: Cache cargo-audit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-audit
+          key: cargo-audit-${{ runner.os }}
+
       - name: Install cargo-audit
-        run: cargo install cargo-audit
+        shell: bash
+        run: |
+          if ! command -v cargo-audit &>/dev/null; then
+            cargo install cargo-audit
+          fi
 
       - name: Rust audit
         run: cargo audit
