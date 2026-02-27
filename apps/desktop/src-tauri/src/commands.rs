@@ -6,16 +6,14 @@
 
 /// Create a brand-new encrypted vault.
 #[tauri::command]
-pub fn vault_create(password: String) -> Result<String, String> {
+pub fn vault_create(_password: String) -> Result<String, String> {
     // Phase 1 stub — real implementation will derive keys and create SQLCipher DB.
-    let _ = password.len(); // avoid unused-variable lint
     Ok("vault_created".into())
 }
 
 /// Unlock the vault with the master password.
 #[tauri::command]
-pub fn vault_unlock(password: String) -> Result<bool, String> {
-    let _ = password.len();
+pub fn vault_unlock(_password: String) -> Result<bool, String> {
     Ok(true)
 }
 

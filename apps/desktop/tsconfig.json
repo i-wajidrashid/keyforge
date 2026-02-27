@@ -10,8 +10,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "sourceMap": true,
-    "outDir": "dist",
-    "rootDir": "src"
+    "noEmit": true
   },
   "include": ["src"]
 }
