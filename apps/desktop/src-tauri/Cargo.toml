@@ -25,3 +25,6 @@ base32 = { workspace = true }
 dirs-next = "2"
 keyforge-crypto = { path = "../../../crates/keyforge-crypto" }
 keyforge-vault = { path = "../../../crates/keyforge-vault" }
+
+[dev-dependencies]
+tempfile = { workspace = true }
