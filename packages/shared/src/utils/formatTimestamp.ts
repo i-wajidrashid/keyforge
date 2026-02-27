@@ -55,7 +55,7 @@ export function formatTimestamp(
 }
 
 /**
- * Format a relative time description (e.g. "2 minutes ago").
+ * Format a relative time description (e.g., "2 minutes ago").
  *
  * Falls back to an absolute timestamp if the Intl.RelativeTimeFormat
  * API is unavailable or the delta is greater than 7 days.
