@@ -52,6 +52,33 @@
   margin-top: var(--space-4);
 }
 
+/* Biometric unlock button */
+.btn-biometric {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-surface-input);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  margin: var(--space-4) auto 0;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.btn-biometric:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+.btn-biometric svg {
+  width: 24px;
+  height: 24px;
+}
+
 /* Wrong password shake animation — UI-SPEC.md */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }

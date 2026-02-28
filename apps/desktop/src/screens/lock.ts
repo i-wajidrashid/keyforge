@@ -3,10 +3,12 @@
  *
  * Shows a password input and either "Unlock" or "Create Vault" depending
  * on whether a vault file already exists on disk.
+ * Supports biometric authentication when available (falls back to password).
  * Follows UI-SPEC.md: shake animation on wrong password, auto-focus.
  */
 
-import { vaultCreate, vaultUnlock, vaultExists } from '../bridge';
+import { vaultCreate, vaultUnlock, vaultExists, biometryStatus, biometryAuth } from '../bridge';
+import { ICON_FINGERPRINT } from '../icons';
 
 export function renderLockScreen(
   root: HTMLElement,
@@ -35,6 +37,10 @@ export function renderLockScreen(
           </button>
         </form>
 
+        <button id="bio-btn" class="btn-biometric" hidden title="Unlock with biometrics" aria-label="Unlock with biometrics">
+          ${ICON_FINGERPRINT}
+        </button>
+
         <p id="lock-error" class="lock-error" hidden></p>
         <p id="lock-status" class="lock-status"></p>
       </div>
@@ -44,6 +50,7 @@ export function renderLockScreen(
   const form = document.getElementById('lock-form') as HTMLFormElement;
   const input = document.getElementById('password-input') as HTMLInputElement;
   const btn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const bioBtn = document.getElementById('bio-btn') as HTMLButtonElement;
   const errorEl = document.getElementById('lock-error') as HTMLParagraphElement;
   const statusEl = document.getElementById('lock-status') as HTMLParagraphElement;
 
@@ -56,6 +63,17 @@ export function renderLockScreen(
       statusEl.textContent = exists
         ? 'Enter your master password to unlock.'
         : 'Choose a master password to create your vault.';
+
+      // Only show biometric button when vault already exists
+      if (exists) {
+        biometryStatus()
+          .then((status) => {
+            if (status.isAvailable) {
+              bioBtn.hidden = false;
+            }
+          })
+          .catch(() => { /* biometry not supported */ });
+      }
     })
     .catch(() => {
       statusEl.textContent = 'Enter your master password.';
@@ -64,6 +82,24 @@ export function renderLockScreen(
   input.addEventListener('input', () => {
     btn.disabled = input.value.length === 0;
     errorEl.hidden = true;
+  });
+
+  // Biometric unlock handler
+  bioBtn.addEventListener('click', async () => {
+    errorEl.hidden = true;
+    try {
+      await biometryAuth('Unlock KeyForge vault');
+      // Biometric passed — unlock vault using stored credentials
+      // The biometric plugin only verifies identity; vault still needs
+      // the master password. On platforms with secure storage the password
+      // would be fetched from the keychain. For now biometric acts as
+      // an identity gate before the password prompt.
+      statusEl.textContent = 'Biometric verified. Enter your master password.';
+      input.focus();
+    } catch {
+      errorEl.textContent = 'Biometric authentication failed';
+      errorEl.hidden = false;
+    }
   });
 
   form.addEventListener('submit', async (e) => {

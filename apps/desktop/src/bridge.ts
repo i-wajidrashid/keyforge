@@ -8,6 +8,11 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import { readText, writeText } from '@tauri-apps/plugin-clipboard-manager';
+import {
+  checkStatus as biometryCheckStatus,
+  authenticate as biometryAuthenticate,
+  type Status as BiometryStatus,
+} from '@choochmeque/tauri-plugin-biometry-api';
 
 // ── Types (mirror the Rust structs) ─────────────────────────────────
 
@@ -117,4 +122,23 @@ export async function clipboardWrite(text: string): Promise<void> {
 
 export async function clipboardRead(): Promise<string> {
   return (await readText()) ?? '';
+}
+
+// ── Biometric authentication ────────────────────────────────────────
+
+export { type BiometryStatus };
+
+/** Check if biometric authentication is available on this device. */
+export async function biometryStatus(): Promise<BiometryStatus> {
+  return biometryCheckStatus();
+}
+
+/** Prompt biometric authentication. Resolves on success, rejects on failure/cancel. */
+export async function biometryAuth(reason: string): Promise<void> {
+  await biometryAuthenticate(reason, {
+    allowDeviceCredential: true,
+    cancelTitle: 'Cancel',
+    fallbackTitle: 'Use Password',
+    confirmationRequired: false,
+  });
 }

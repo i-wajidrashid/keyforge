@@ -9,9 +9,16 @@
     "dev:fe": "vite",
     "build:fe": "vite build",
     "tauri": "tauri",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "android:init": "tauri android init",
+    "android:dev": "tauri android dev",
+    "android:build": "tauri android build",
+    "ios:init": "tauri ios init",
+    "ios:dev": "tauri ios dev",
+    "ios:build": "tauri ios build"
   },
   "dependencies": {
+    "@choochmeque/tauri-plugin-biometry-api": "^0.2.6",
     "@keyforge/core": "workspace:*",
     "@keyforge/shared": "workspace:*",
     "@keyforge/ui": "workspace:*",
