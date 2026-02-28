@@ -58,16 +58,39 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Setup macOS code signing
+        if: matrix.platform == 'macos-latest'
+        run: |
+          if [ -z "$APPLE_CERT" ]; then
+            echo "⚠️ APPLE_CERTIFICATE not set, skipping code signing"
+            exit 0
+          fi
+          if ! echo "$APPLE_CERT" | base64 --decode > /dev/null 2>&1; then
+            echo "⚠️ APPLE_CERTIFICATE is not valid base64, skipping code signing"
+            exit 0
+          fi
+          DELIM="CERT_$(openssl rand -hex 8)"
+          echo "APPLE_CERTIFICATE<<$DELIM" >> "$GITHUB_ENV"
+          echo "$APPLE_CERT" >> "$GITHUB_ENV"
+          echo "$DELIM" >> "$GITHUB_ENV"
+          echo "APPLE_CERTIFICATE_PASSWORD=$APPLE_CERT_PASS" >> "$GITHUB_ENV"
+          echo "APPLE_SIGNING_IDENTITY=$APPLE_SIGN_ID" >> "$GITHUB_ENV"
+          echo "APPLE_API_ISSUER=$API_ISSUER" >> "$GITHUB_ENV"
+          echo "APPLE_API_KEY=$API_KEY" >> "$GITHUB_ENV"
+          echo "APPLE_API_KEY_PATH=$API_KEY_PATH" >> "$GITHUB_ENV"
+          echo "✅ macOS code signing configured"
+        env:
+          APPLE_CERT: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERT_PASS: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGN_ID: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          API_KEY: ${{ secrets.APPLE_API_KEY }}
+          API_KEY_PATH: ${{ secrets.APPLE_API_KEY_PATH }}
+
       - name: Build and release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_KEY_PATH: ${{ secrets.APPLE_API_KEY_PATH }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'KeyForge ${{ github.ref_name }}'
