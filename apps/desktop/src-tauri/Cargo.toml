@@ -1,0 +1,31 @@
+[package]
+name = "keyforge-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "KeyForge desktop application — Tauri v2"
+
+[lib]
+name = "keyforge_desktop_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "keyforge-desktop"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { workspace = true }
+
+[dependencies]
+tauri = { workspace = true }
+tauri-plugin-opener = { workspace = true }
+tauri-plugin-clipboard-manager = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+base32 = { workspace = true }
+dirs-next = "2"
+keyforge-crypto = { path = "../../../crates/keyforge-crypto" }
+keyforge-vault = { path = "../../../crates/keyforge-vault" }
+
+[dev-dependencies]
+tempfile = { workspace = true }

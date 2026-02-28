@@ -1,0 +1,25 @@
+import type { Platform } from '../types/platform';
+
+/** Detect the current runtime platform. */
+export function detectPlatform(): Platform {
+  if (typeof window !== 'undefined' && '__TAURI__' in window) {
+    if (typeof navigator !== 'undefined' && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
+      return 'tauri-mobile';
+    }
+    return 'tauri-desktop';
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chromeGlobal = typeof globalThis !== 'undefined' ? (globalThis as any).chrome : undefined;
+  if (chromeGlobal?.runtime?.id) {
+    return 'extension';
+  }
+
+  return 'web';
+}
+
+/** Whether the current runtime has Rust access via Tauri. */
+export function hasTauriBridge(): boolean {
+  const platform = detectPlatform();
+  return platform === 'tauri-desktop' || platform === 'tauri-mobile';
+}

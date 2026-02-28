@@ -1,0 +1,26 @@
+{
+  "name": "@keyforge/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "dev:fe": "vite",
+    "build:fe": "vite build",
+    "tauri": "tauri",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@keyforge/core": "workspace:*",
+    "@keyforge/shared": "workspace:*",
+    "@keyforge/ui": "workspace:*",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-clipboard-manager": "^2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "typescript": "^5.5.0",
+    "vite": "^6"
+  }
+}

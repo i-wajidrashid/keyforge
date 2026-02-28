@@ -1,0 +1,593 @@
+/* ── App styles ──────────────────────────────────────────────────────
+ *
+ * Uses design tokens from tokens.css. Dark theme, monospace codes,
+ * countdown urgency colors. Utility-first, no framework.
+ * Follows UI-SPEC.md — no AI icons, no gradients, no color noise.
+ */
+
+/* ── Lock Screen ─────────────────────────────────────────────────── */
+
+.lock-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-6);
+}
+
+.lock-content {
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+}
+
+.lock-logo {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  letter-spacing: -0.5px;
+  margin-bottom: var(--space-1);
+}
+
+.lock-tagline {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-8);
+}
+
+.lock-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.lock-error {
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  margin-top: var(--space-2);
+}
+
+.lock-status {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  margin-top: var(--space-4);
+}
+
+/* Wrong password shake animation — UI-SPEC.md */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.input-shake {
+  animation: shake 300ms ease-out;
+}
+
+/* ── Inputs ──────────────────────────────────────────────────────── */
+
+.input-group {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-input);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  transition: border-color var(--transition-fast);
+}
+
+.input:focus {
+  border-color: var(--color-border-strong);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.input-mono {
+  font-family: var(--font-code);
+  font-size: var(--text-sm);
+  letter-spacing: 1px;
+}
+
+select.input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  padding-right: var(--space-8);
+  cursor: pointer;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+
+.btn {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  transition: background-color var(--transition-fast), opacity var(--transition-fast);
+  cursor: pointer;
+  border: none;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-text-primary);
+  color: var(--color-text-inverse);
+}
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast);
+  cursor: pointer;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.btn-icon:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.btn-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── App Shell ───────────────────────────────────────────────────── */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+  gap: var(--space-2);
+}
+
+.app-header button,
+.app-header input {
+  -webkit-app-region: no-drag;
+}
+
+.app-title {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  flex-shrink: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+/* ── Search ──────────────────────────────────────────────────────── */
+
+.search-wrapper {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--space-1) var(--space-3);
+  padding-left: 28px;
+  background: var(--color-surface-input);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  transition: border-color var(--transition-fast);
+}
+
+.search-input:focus {
+  border-color: var(--color-border-default);
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.search-clear {
+  position: absolute;
+  right: var(--space-1);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  background: none;
+  border: none;
+}
+
+.search-clear svg {
+  width: 12px;
+  height: 12px;
+}
+
+.search-clear:hover {
+  color: var(--color-text-primary);
+}
+
+.search-input:not(:placeholder-shown) ~ .search-clear {
+  display: flex;
+}
+
+/* ── Token List ──────────────────────────────────────────────────── */
+
+.token-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.token-card {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+  transition: background-color var(--transition-normal);
+  cursor: pointer;
+}
+
+.token-card:hover {
+  background: var(--color-surface-hover);
+}
+
+/* Copy flash animation — UI-SPEC.md: card background flashes --surface-active */
+@keyframes copy-flash {
+  0% { background-color: var(--color-surface-active); }
+  100% { background-color: transparent; }
+}
+
+.token-card.flash {
+  animation: copy-flash 200ms ease-out;
+}
+
+.token-card.hidden {
+  display: none;
+}
+
+/* ── Token Avatar ────────────────────────────────────────────────── */
+
+.token-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+/* ── Token Info ──────────────────────────────────────────────────── */
+
+.token-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.token-issuer {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.token-account {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Token Code + Timer ──────────────────────────────────────────── */
+
+.token-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.token-code {
+  font-family: var(--font-code);
+  font-size: var(--text-code);
+  font-weight: var(--font-bold);
+  line-height: 1;
+  letter-spacing: 2px;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+/* Code fade animation — UI-SPEC.md */
+@keyframes code-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.token-code.refreshing {
+  animation: code-fade-in 150ms ease;
+}
+
+.token-timer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.token-timer-text {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+}
+
+/* ── Progress Ring ───────────────────────────────────────────────── */
+
+.progress-ring {
+  width: 20px;
+  height: 20px;
+  transform: rotate(-90deg);
+}
+
+.progress-ring__bg {
+  fill: none;
+  stroke: var(--color-border-subtle);
+  stroke-width: 2.5;
+}
+
+.progress-ring__fg {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear, stroke var(--transition-fast);
+}
+
+/* ── HOTP refresh button ─────────────────────────────────────────── */
+
+.token-hotp-refresh {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+}
+
+.token-hotp-refresh:hover {
+  background: var(--color-surface-overlay);
+  color: var(--color-text-primary);
+}
+
+.token-hotp-refresh svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) var(--space-6);
+  text-align: center;
+  gap: var(--space-4);
+}
+
+.empty-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-medium);
+}
+
+.empty-sub {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.empty-action {
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  background: var(--color-text-primary);
+  color: var(--color-text-inverse);
+  cursor: pointer;
+  border: none;
+  transition: opacity var(--transition-fast);
+}
+
+.empty-action:hover {
+  opacity: 0.9;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* ── Toast ────────────────────────────────────────────────────────── */
+
+.toast-container {
+  position: fixed;
+  bottom: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  pointer-events: none;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(8px); }
+}
+
+.toast {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface-overlay);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-md);
+  animation: toast-in 200ms ease;
+  pointer-events: auto;
+}
+
+.toast.dismissing {
+  animation: toast-out 200ms ease forwards;
+}
+
+/* ── Add Token Form ──────────────────────────────────────────────── */
+
+.add-form-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+.add-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.form-field label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.form-field-half {
+  flex: 1;
+}
+
+.form-error {
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
