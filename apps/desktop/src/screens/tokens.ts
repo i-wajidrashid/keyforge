@@ -36,6 +36,7 @@ const URGENCY_DANGER_SECS = 5;
 const URGENCY_WARNING_SECS = 10;
 const PROGRESS_RING_RADIUS = 8;
 const PROGRESS_RING_CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RING_RADIUS;
+const FAVICON_URL_PREFIX = 'https://www.google.com/s2/favicons';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -206,7 +207,7 @@ function renderList(): void {
       const code = codes.get(token.id) ?? '';
       const remaining = timeLeft(token.period);
       const initial = (token.issuer || '?')[0].toUpperCase();
-      const avatarHtml = token.icon
+      const avatarHtml = token.icon && token.icon.startsWith(FAVICON_URL_PREFIX)
         ? `<img class="token-avatar token-avatar-img" src="${escapeHtml(token.icon)}" alt="" data-initial="${initial}" /><div class="token-avatar token-avatar-letter" style="display:none">${initial}</div>`
         : `<div class="token-avatar">${initial}</div>`;
 
@@ -337,8 +338,8 @@ async function handleListClick(e: Event): Promise<void> {
     const id = deleteBtn.dataset.id;
     if (!id) return;
     const token = tokens.find((t) => t.id === id);
-    const label = token ? token.issuer : 'this token';
-    if (!confirm(`Delete ${label}?`)) return;
+    if (!token) return;
+    if (!confirm(`Delete ${token.issuer}?`)) return;
     try {
       await tokenDelete(id);
       await loadTokens();

@@ -24,6 +24,8 @@ function extractDomain(url: string): string | null {
   }
 }
 
+const FAVICON_BASE_URL = 'https://www.google.com/s2/favicons';
+
 export function renderAddTokenScreen(
   root: HTMLElement,
   onDone: () => void,
@@ -57,15 +59,12 @@ export function renderAddTokenScreen(
             <input id="add-website" type="text" class="input" placeholder="github.com" spellcheck="false" />
           </div>
 
-          <div class="form-row">
-            <div class="form-field form-field-half">
+          <div class="form-field">
               <label for="add-type">Type</label>
               <select id="add-type" class="input">
                 <option value="totp" selected>TOTP</option>
                 <option value="hotp">HOTP</option>
               </select>
-            </div>
-            <div class="form-field form-field-half"></div>
           </div>
 
           <button id="advanced-toggle" type="button" class="advanced-toggle">
@@ -152,7 +151,7 @@ export function renderAddTokenScreen(
     if (website) {
       const domain = extractDomain(website);
       if (domain) {
-        icon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
+        icon = `${FAVICON_BASE_URL}?domain=${encodeURIComponent(domain)}&sz=64`;
       }
     }
 
