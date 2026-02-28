@@ -9,7 +9,7 @@
 import './styles/app.css';
 import { renderLockScreen } from './screens/lock';
 import { renderTokenList } from './screens/tokens';
-import { vaultIsLocked } from './bridge';
+import { vaultIsLocked, vaultLock } from './bridge';
 
 const app = document.getElementById('app')!;
 
@@ -22,6 +22,19 @@ function showLock(): void {
 function showTokens(): void {
   renderTokenList(app, showLock);
 }
+
+/** Lock the vault when the app goes to background / is minimized. */
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'hidden') {
+    try {
+      const locked = await vaultIsLocked();
+      if (!locked) {
+        await vaultLock();
+        showLock();
+      }
+    } catch { /* already locked or not ready */ }
+  }
+});
 
 /** Check vault state and render the right screen. */
 async function boot(): Promise<void> {
