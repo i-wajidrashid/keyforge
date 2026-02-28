@@ -26,6 +26,7 @@ impl Vault {
             } else if token.token_type.eq_ignore_ascii_case("hotp") {
                 query_params.push(format!("counter={}", token.counter));
             } else {
+                // Defensive: for any future/non-standard type, preserve all fields
                 query_params.push(format!("period={}", token.period));
                 query_params.push(format!("counter={}", token.counter));
             }
