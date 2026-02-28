@@ -7,6 +7,7 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
 // ── Types (mirror the Rust structs) ─────────────────────────────────
 
@@ -106,4 +107,10 @@ export function vaultImportUris(uris: string[]): Promise<number> {
 
 export function vaultExportUris(): Promise<string[]> {
   return invoke<string[]>('vault_export_uris');
+}
+
+// ── Clipboard (Tauri plugin, NOT navigator.clipboard) ───────────────
+
+export async function clipboardWrite(text: string): Promise<void> {
+  await writeText(text);
 }

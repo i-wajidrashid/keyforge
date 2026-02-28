@@ -1,41 +1,45 @@
 :root {
-  /* Surface colors (dark theme) */
+  /* Surface colors (dark theme) — matches UI-SPEC.md */
   --color-surface-base: #0A0A0A;
   --color-surface-raised: #141414;
   --color-surface-overlay: #1E1E1E;
   --color-surface-input: #1A1A1A;
-  --color-surface-hover: #252525;
+  --color-surface-hover: #1F1F1F;
+  --color-surface-active: #252525;
 
   /* Border colors */
+  --color-border-subtle: #1E1E1E;
   --color-border-default: #2A2A2A;
-  --color-border-focus: #555555;
+  --color-border-strong: #3A3A3A;
 
   /* Text colors */
   --color-text-primary: #EDEDED;
   --color-text-secondary: #888888;
   --color-text-tertiary: #555555;
+  --color-text-disabled: #333333;
   --color-text-inverse: #0A0A0A;
 
-  /* Accent colors (countdown urgency only) */
-  --color-accent-green: #22C55E;
-  --color-accent-amber: #F59E0B;
-  --color-accent-red: #EF4444;
+  /* Accent colors (countdown urgency ONLY) — UI-SPEC.md values */
+  --color-accent-safe: #4ADE80;
+  --color-accent-warning: #FBBF24;
+  --color-accent-danger: #EF4444;
 
   /* Feedback colors */
-  --color-success: #22C55E;
-  --color-warning: #F59E0B;
+  --color-success: #4ADE80;
   --color-error: #EF4444;
+  --color-destructive: #DC2626;
 
-  /* Typography */
-  --font-body: 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif;
-  --font-code: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  /* Typography — UI-SPEC.md font stacks */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-code: 'JetBrains Mono', 'SF Mono', 'Cascadia Mono', 'Fira Code', monospace;
 
-  /* Font sizes */
+  /* Font sizes — UI-SPEC.md type scale */
   --text-xs: 11px;
   --text-sm: 13px;
   --text-base: 15px;
-  --text-lg: 17px;
-  --text-xl: 20px;
+  --text-lg: 18px;
+  --text-code: 28px;
+  --text-xl: 22px;
   --text-2xl: 24px;
   --text-3xl: 32px;
 

@@ -12,14 +12,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@keyforge/ui": "workspace:*",
     "@keyforge/core": "workspace:*",
     "@keyforge/shared": "workspace:*",
-    "@tauri-apps/api": "^2"
+    "@keyforge/ui": "workspace:*",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-clipboard-manager": "^2"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
-    "vite": "^6",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "vite": "^6"
   }
 }

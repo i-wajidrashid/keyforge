@@ -4,9 +4,11 @@
  * Lets the user type in issuer, account, Base32 secret, and optional
  * settings (algorithm, digits, period).  Validates input and calls
  * the Tauri `token_add` command.
+ * Follows UI-SPEC.md layout: back arrow icon, proper form fields.
  */
 
 import { tokenAdd } from '../bridge';
+import { ICON_BACK } from '../icons';
 
 export function renderAddTokenScreen(
   root: HTMLElement,
@@ -15,24 +17,24 @@ export function renderAddTokenScreen(
   root.innerHTML = `
     <div class="app-shell">
       <header class="app-header">
-        <button id="back-btn" class="btn-icon" title="Back" aria-label="Back">←</button>
+        <button id="back-btn" class="btn-icon" title="Back" aria-label="Back">${ICON_BACK}</button>
         <h1 class="app-title">Add Token</h1>
         <div class="header-actions"></div>
       </header>
       <main class="add-form-container">
         <form id="add-form" class="add-form" autocomplete="off">
           <div class="form-field">
-            <label for="add-issuer">Issuer</label>
-            <input id="add-issuer" type="text" class="input" placeholder="GitHub, AWS, Google…" required />
+            <label for="add-issuer">Issuer (service name)</label>
+            <input id="add-issuer" type="text" class="input" placeholder="GitHub" required />
           </div>
 
           <div class="form-field">
             <label for="add-account">Account</label>
-            <input id="add-account" type="text" class="input" placeholder="user@example.com" />
+            <input id="add-account" type="text" class="input" placeholder="user@email.com" />
           </div>
 
           <div class="form-field">
-            <label for="add-secret">Secret (Base32)</label>
+            <label for="add-secret">Secret Key</label>
             <input id="add-secret" type="text" class="input input-mono" placeholder="JBSWY3DPEHPK3PXP" required spellcheck="false" autocapitalize="off" />
           </div>
 
@@ -96,22 +98,21 @@ export function renderAddTokenScreen(
     const period = parseInt((document.getElementById('add-period') as HTMLInputElement).value, 10);
 
     if (!issuer) {
-      showError('Issuer is required.');
+      showError('Issuer is required');
       return;
     }
     if (!secret) {
-      showError('Secret is required.');
+      showError('Secret key is required');
       return;
     }
-    // Basic Base32 validation
     if (!/^[A-Z2-7]+=*$/i.test(secret)) {
-      showError('Secret must be valid Base32 (A-Z, 2-7).');
+      showError('Invalid Base32 secret');
       return;
     }
 
     const btn = document.getElementById('add-submit') as HTMLButtonElement;
     btn.disabled = true;
-    btn.textContent = 'Adding…';
+    btn.textContent = 'Adding\u2026';
 
     try {
       await tokenAdd({

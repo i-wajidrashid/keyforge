@@ -3,6 +3,7 @@
  *
  * Shows a password input and either "Unlock" or "Create Vault" depending
  * on whether a vault file already exists on disk.
+ * Follows UI-SPEC.md: shake animation on wrong password, auto-focus.
  */
 
 import { vaultCreate, vaultUnlock, vaultExists } from '../bridge';
@@ -48,7 +49,6 @@ export function renderLockScreen(
 
   let hasVault = false;
 
-  // Check if vault exists and update button label
   vaultExists()
     .then((exists) => {
       hasVault = exists;
@@ -61,7 +61,6 @@ export function renderLockScreen(
       statusEl.textContent = 'Enter your master password.';
     });
 
-  // Enable button when password is non-empty
   input.addEventListener('input', () => {
     btn.disabled = input.value.length === 0;
     errorEl.hidden = true;
@@ -73,7 +72,7 @@ export function renderLockScreen(
     if (!password) return;
 
     btn.disabled = true;
-    btn.textContent = hasVault ? 'Unlocking…' : 'Creating…';
+    btn.textContent = hasVault ? 'Unlocking\u2026' : 'Creating\u2026';
     errorEl.hidden = true;
 
     try {
@@ -85,14 +84,19 @@ export function renderLockScreen(
       onUnlocked();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
+
+      // Wrong password → shake animation per UI-SPEC.md
+      input.classList.add('input-shake');
+      setTimeout(() => input.classList.remove('input-shake'), 300);
+
       errorEl.textContent = msg.includes('Wrong password')
-        ? 'Wrong password. Try again.'
+        ? 'Wrong password'
         : msg;
       errorEl.hidden = false;
       btn.disabled = false;
       btn.textContent = hasVault ? 'Unlock' : 'Create Vault';
+      input.value = '';
       input.focus();
-      input.select();
     }
   });
 }
