@@ -68,8 +68,7 @@ export function renderLockScreen(
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const password = input.value;
-    if (!password) return;
+    if (!input.value) return;
 
     btn.disabled = true;
     btn.textContent = hasVault ? 'Unlocking\u2026' : 'Creating\u2026';
@@ -77,11 +76,11 @@ export function renderLockScreen(
 
     try {
       if (hasVault) {
-        await vaultUnlock(password);
+        await vaultUnlock(input.value);
       } else {
-        await vaultCreate(password);
+        await vaultCreate(input.value);
       }
-      // Clear password from DOM immediately (security: don't keep in memory)
+      // Clear password from DOM immediately after use
       input.value = '';
       onUnlocked();
     } catch (err: unknown) {
