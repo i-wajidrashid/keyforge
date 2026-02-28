@@ -109,6 +109,6 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            apps/desktop/src-tauri/gen/apple/build/**/*.app
+            apps/desktop/src-tauri/gen/apple/build/Build/Products/Debug-iphonesimulator/*.app
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

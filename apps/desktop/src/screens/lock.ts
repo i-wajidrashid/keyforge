@@ -3,11 +3,21 @@
  *
  * Shows a password input and either "Unlock" or "Create Vault" depending
  * on whether a vault file already exists on disk.
- * Supports biometric authentication when available (falls back to password).
+ * Supports biometric authentication when available — stores the master
+ * password in biometric-protected secure storage on first successful
+ * unlock, then retrieves it on subsequent biometric unlocks.
  * Follows UI-SPEC.md: shake animation on wrong password, auto-focus.
  */
 
-import { vaultCreate, vaultUnlock, vaultExists, biometryStatus, biometryAuth } from '../bridge';
+import {
+  vaultCreate,
+  vaultUnlock,
+  vaultExists,
+  biometryStatus,
+  biometryHasPassword,
+  biometryStorePassword,
+  biometryGetPassword,
+} from '../bridge';
 import { ICON_FINGERPRINT } from '../icons';
 
 export function renderLockScreen(
@@ -55,6 +65,7 @@ export function renderLockScreen(
   const statusEl = document.getElementById('lock-status') as HTMLParagraphElement;
 
   let hasVault = false;
+  let biometryAvailable = false;
 
   vaultExists()
     .then((exists) => {
@@ -64,12 +75,18 @@ export function renderLockScreen(
         ? 'Enter your master password to unlock.'
         : 'Choose a master password to create your vault.';
 
-      // Only show biometric button when vault already exists
+      // Show biometric button when vault exists + biometry available + password stored
       if (exists) {
         biometryStatus()
-          .then((status) => {
+          .then(async (status) => {
             if (status.isAvailable) {
-              bioBtn.hidden = false;
+              biometryAvailable = true;
+              try {
+                const stored = await biometryHasPassword();
+                if (stored) {
+                  bioBtn.hidden = false;
+                }
+              } catch { /* secure storage not available */ }
             }
           })
           .catch(() => { /* biometry not supported */ });
@@ -84,21 +101,20 @@ export function renderLockScreen(
     errorEl.hidden = true;
   });
 
-  // Biometric unlock handler
+  // Biometric unlock — retrieves password from secure storage and unlocks
   bioBtn.addEventListener('click', async () => {
     errorEl.hidden = true;
     try {
-      await biometryAuth('Unlock KeyForge vault');
-      // Biometric passed — unlock vault using stored credentials
-      // The biometric plugin only verifies identity; vault still needs
-      // the master password. On platforms with secure storage the password
-      // would be fetched from the keychain. For now biometric acts as
-      // an identity gate before the password prompt.
-      statusEl.textContent = 'Biometric verified. Enter your master password.';
-      input.focus();
+      const password = await biometryGetPassword('Unlock KeyForge vault');
+      btn.disabled = true;
+      btn.textContent = 'Unlocking\u2026';
+      await vaultUnlock(password);
+      onUnlocked();
     } catch {
       errorEl.textContent = 'Biometric authentication failed';
       errorEl.hidden = false;
+      btn.disabled = false;
+      btn.textContent = 'Unlock';
     }
   });
 
@@ -111,11 +127,20 @@ export function renderLockScreen(
     errorEl.hidden = true;
 
     try {
+      const password = input.value;
       if (hasVault) {
-        await vaultUnlock(input.value);
+        await vaultUnlock(password);
       } else {
-        await vaultCreate(input.value);
+        await vaultCreate(password);
       }
+
+      // Store password in biometric secure storage for future biometric unlocks
+      if (biometryAvailable) {
+        try {
+          await biometryStorePassword(password);
+        } catch { /* secure storage may not be available on all platforms */ }
+      }
+
       // Clear password from DOM immediately after use
       input.value = '';
       onUnlocked();
