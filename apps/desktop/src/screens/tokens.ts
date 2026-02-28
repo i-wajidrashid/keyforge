@@ -29,6 +29,18 @@ function timeLeft(period: number): number {
   return period - (now % period);
 }
 
+// ── Constants ───────────────────────────────────────────────────────
+
+const CODE_PLACEHOLDER = '------';
+const URGENCY_DANGER_SECS = 5;
+const URGENCY_WARNING_SECS = 10;
+
+function urgencyClass(remaining: number): string {
+  if (remaining <= URGENCY_DANGER_SECS) return 'danger';
+  if (remaining <= URGENCY_WARNING_SECS) return 'warning';
+  return 'safe';
+}
+
 // ── State ───────────────────────────────────────────────────────────
 
 let tokens: Token[] = [];
@@ -89,7 +101,7 @@ async function refreshCodes(): Promise<void> {
           : await otpGenerateTotp(token.id);
       newCodes.set(token.id, code);
     } catch {
-      newCodes.set(token.id, '------');
+      newCodes.set(token.id, CODE_PLACEHOLDER);
     }
   }
   codes = newCodes;
@@ -110,10 +122,9 @@ function renderList(): void {
 
   list.innerHTML = tokens
     .map((token) => {
-      const code = codes.get(token.id) ?? '------';
+      const code = codes.get(token.id) ?? CODE_PLACEHOLDER;
       const remaining = timeLeft(token.period);
-      const urgency =
-        remaining <= 5 ? 'danger' : remaining <= 10 ? 'warning' : 'safe';
+      const urgency = urgencyClass(remaining);
 
       return `
       <div class="token-card" data-id="${token.id}" data-type="${token.token_type}">
@@ -167,8 +178,7 @@ function startTick(): void {
       if (token.token_type !== 'totp') continue;
 
       const remaining = timeLeft(token.period);
-      const urgency =
-        remaining <= 5 ? 'danger' : remaining <= 10 ? 'warning' : 'safe';
+      const urgency = urgencyClass(remaining);
 
       const timerEl = document.querySelector(
         `.token-timer[data-id="${token.id}"]`,
@@ -183,7 +193,7 @@ function startTick(): void {
           `.token-code[data-id="${token.id}"]`,
         ) as HTMLElement | null;
         if (codeEl) {
-          const code = codes.get(token.id) ?? '------';
+          const code = codes.get(token.id) ?? CODE_PLACEHOLDER;
           codeEl.textContent = formatCode(code);
         }
       }
@@ -208,13 +218,13 @@ async function handleListClick(e: Event): Promise<void> {
   // Copy code
   if (target.classList.contains('token-code')) {
     const rawCode = codes.get(id);
-    if (rawCode && rawCode !== '------') {
+    if (rawCode && rawCode !== CODE_PLACEHOLDER) {
       try {
         await navigator.clipboard.writeText(rawCode);
         target.textContent = 'Copied!';
         target.classList.add('copied');
         setTimeout(() => {
-          const code = codes.get(id) ?? '------';
+          const code = codes.get(id) ?? CODE_PLACEHOLDER;
           target.textContent = formatCode(code);
           target.classList.remove('copied');
         }, 1200);
