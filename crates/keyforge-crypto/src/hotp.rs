@@ -12,8 +12,20 @@ pub enum Algorithm {
     SHA512,
 }
 
+/// Supported digit counts for OTP codes.
+const SUPPORTED_DIGITS: [u32; 2] = [6, 8];
+
 /// Generate an HOTP code per RFC 4226.
+///
+/// # Panics
+///
+/// Panics if `digits` is not 6 or 8.
 pub fn generate(secret: &[u8], counter: u64, digits: u32, algorithm: Algorithm) -> String {
+    assert!(
+        SUPPORTED_DIGITS.contains(&digits),
+        "unsupported digit count {digits}: must be 6 or 8"
+    );
+
     let counter_bytes = counter.to_be_bytes();
 
     let mut hmac_result = match algorithm {

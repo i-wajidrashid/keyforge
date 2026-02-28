@@ -59,7 +59,7 @@ impl Vault {
                 rusqlite::params![INITIAL_SORT_ORDER],
                 |row| row.get(0),
             )
-            .unwrap_or(INITIAL_SORT_ORDER);
+            .map_err(|e| VaultError::Query(e.to_string()))?;
 
         self.conn().execute(
             "INSERT INTO tokens (id, issuer, account, secret_encrypted, algorithm, digits, type, period, counter, icon, sort_order, created_at, updated_at)

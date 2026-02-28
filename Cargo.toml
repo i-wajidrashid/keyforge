@@ -15,7 +15,6 @@ repository = "https://github.com/i-wajidrashid/keyforge"
 
 [workspace.dependencies]
 # Crypto
-ring = "0.17"
 hmac = "0.12"
 sha1 = "0.10"
 sha2 = "0.10"

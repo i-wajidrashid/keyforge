@@ -17,6 +17,8 @@ pub enum CryptoError {
     InvalidKdfParams(String),
     /// Argon2id key derivation failed.
     KdfDerivation(String),
+    /// The nonce passed to encrypt_with_nonce has the wrong length.
+    InvalidNonceSize { expected: usize, got: usize },
 }
 
 impl fmt::Display for CryptoError {
@@ -28,6 +30,9 @@ impl fmt::Display for CryptoError {
             Self::DecryptionAuth => write!(f, "Decryption failed: authentication error"),
             Self::InvalidKdfParams(e) => write!(f, "Invalid Argon2id params: {}", e),
             Self::KdfDerivation(e) => write!(f, "Argon2id derivation failed: {}", e),
+            Self::InvalidNonceSize { expected, got } => {
+                write!(f, "Invalid nonce size: expected {}, got {}", expected, got)
+            }
         }
     }
 }

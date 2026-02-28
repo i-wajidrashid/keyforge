@@ -7,6 +7,8 @@ import {
   DEFAULT_PERIOD,
   DEFAULT_COUNTER,
   DEFAULT_ISSUER,
+  SUPPORTED_ALGORITHMS,
+  SUPPORTED_DIGITS,
   ERR_INVALID_OTPAUTH_URI,
   ERR_UNKNOWN_TOKEN_TYPE,
   ERR_MISSING_SECRET,
@@ -60,10 +62,26 @@ export function parseOtpUri(uri: string): ParsedOtpUri {
   const secret = base32Decode(secretBase32);
 
   const issuer = url.searchParams.get('issuer') || issuerFromLabel || DEFAULT_ISSUER;
-  const algorithm = (url.searchParams.get('algorithm')?.toUpperCase() || DEFAULT_ALGORITHM) as Algorithm;
-  const digits = parseInt(url.searchParams.get('digits') || String(DEFAULT_DIGITS), 10);
-  const period = parseInt(url.searchParams.get('period') || String(DEFAULT_PERIOD), 10);
-  const counter = parseInt(url.searchParams.get('counter') || String(DEFAULT_COUNTER), 10);
+  const rawAlgorithm = (url.searchParams.get('algorithm')?.toUpperCase() || DEFAULT_ALGORITHM) as Algorithm;
+  const rawDigits = parseInt(url.searchParams.get('digits') || String(DEFAULT_DIGITS), 10);
+  const rawPeriod = parseInt(url.searchParams.get('period') || String(DEFAULT_PERIOD), 10);
+  const rawCounter = parseInt(url.searchParams.get('counter') || String(DEFAULT_COUNTER), 10);
+
+  // Validate algorithm
+  const algorithm: Algorithm = (SUPPORTED_ALGORITHMS as readonly string[]).includes(rawAlgorithm)
+    ? rawAlgorithm
+    : DEFAULT_ALGORITHM as Algorithm;
+
+  // Validate digits
+  const digits: number = (SUPPORTED_DIGITS as readonly number[]).includes(rawDigits)
+    ? rawDigits
+    : DEFAULT_DIGITS;
+
+  // Validate period (must be positive)
+  const period: number = Number.isFinite(rawPeriod) && rawPeriod > 0 ? rawPeriod : DEFAULT_PERIOD;
+
+  // Validate counter (must be non-negative)
+  const counter: number = Number.isFinite(rawCounter) && rawCounter >= 0 ? rawCounter : DEFAULT_COUNTER;
 
   return {
     type,

@@ -3,6 +3,7 @@
 use crate::constants::OTPAUTH_SCHEME;
 use crate::db::Vault;
 use crate::error::VaultError;
+use zeroize::Zeroize;
 
 impl Vault {
     /// Export all tokens as `otpauth://` URIs (plaintext).
@@ -14,17 +15,30 @@ impl Vault {
             let secret = self.get_token_secret(&token.id)?;
             let secret_b32 = base32::encode(base32::Alphabet::Rfc4648 { padding: false }, &secret);
 
+            let mut query_params = Vec::new();
+            query_params.push(format!("secret={}", secret_b32));
+            query_params.push(format!("algorithm={}", token.algorithm));
+            query_params.push(format!("digits={}", token.digits));
+            query_params.push(format!("issuer={}", urlencoding_encode(&token.issuer)));
+
+            if token.token_type.eq_ignore_ascii_case("totp") {
+                query_params.push(format!("period={}", token.period));
+            } else if token.token_type.eq_ignore_ascii_case("hotp") {
+                query_params.push(format!("counter={}", token.counter));
+            } else {
+                query_params.push(format!("period={}", token.period));
+                query_params.push(format!("counter={}", token.counter));
+            }
+
+            let query = query_params.join("&");
+
             let uri = format!(
-                "{}{}/{}:{}?secret={}&algorithm={}&digits={}&period={}&counter={}",
+                "{}{}/{}:{}?{}",
                 OTPAUTH_SCHEME,
                 token.token_type,
                 urlencoding_encode(&token.issuer),
                 urlencoding_encode(&token.account),
-                secret_b32,
-                token.algorithm,
-                token.digits,
-                token.period,
-                token.counter,
+                query,
             );
             uris.push(uri);
         }
@@ -40,8 +54,10 @@ impl Vault {
 
         let salt = keyforge_crypto::random::generate_salt();
         let params = keyforge_crypto::kdf::KdfParams::default();
-        let key = keyforge_crypto::kdf::derive_key(export_password, &salt, &params)?;
-        let encrypted = keyforge_crypto::aead::encrypt(&json, &key)?;
+        let mut key = keyforge_crypto::kdf::derive_key(export_password, &salt, &params)?;
+        let result = keyforge_crypto::aead::encrypt(&json, &key);
+        key.zeroize();
+        let encrypted = result?;
 
         // [salt][encrypted]
         let mut output = Vec::new();

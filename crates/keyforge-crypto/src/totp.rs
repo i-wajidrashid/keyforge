@@ -5,6 +5,10 @@ use crate::hotp;
 pub use hotp::Algorithm;
 
 /// Generate a TOTP code per RFC 6238.
+///
+/// # Panics
+///
+/// Panics if `period` is 0.
 pub fn generate(
     secret: &[u8],
     time: u64,
@@ -12,12 +16,18 @@ pub fn generate(
     digits: u32,
     algorithm: Algorithm,
 ) -> String {
+    assert!(period > 0, "TOTP period must be > 0");
     let counter = time / period;
     hotp::generate(secret, counter, digits, algorithm)
 }
 
 /// Seconds remaining in the current TOTP period.
+///
+/// # Panics
+///
+/// Panics if `period` is 0.
 pub fn time_remaining(time: u64, period: u64) -> u64 {
+    assert!(period > 0, "TOTP period must be > 0");
     period - (time % period)
 }
 

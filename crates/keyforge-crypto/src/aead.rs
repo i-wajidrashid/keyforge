@@ -22,6 +22,14 @@ pub fn encrypt_with_nonce(
     key: &[u8; 32],
     nonce_bytes: &[u8],
 ) -> Result<Vec<u8>, String> {
+    if nonce_bytes.len() != NONCE_SIZE {
+        return Err(CryptoError::InvalidNonceSize {
+            expected: NONCE_SIZE,
+            got: nonce_bytes.len(),
+        }
+        .into());
+    }
+
     let cipher =
         Aes256Gcm::new_from_slice(key).map_err(|e| CryptoError::CipherInit(e.to_string()))?;
 

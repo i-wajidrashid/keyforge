@@ -45,9 +45,16 @@ impl Vault {
     }
 
     fn set_key(conn: &Connection, key: &[u8; 32]) -> Result<(), String> {
-        let hex_key: String = key.iter().map(|b| format!("{:02x}", b)).collect();
-        conn.pragma_update(None, "key", format!("x'{}'", hex_key))
-            .map_err(|e| VaultError::SetEncryptionKey(e.to_string()))?;
+        let mut hex_key: String = key.iter().map(|b| format!("{:02x}", b)).collect();
+        let mut pragma_value = format!("x'{}'", hex_key);
+        let result = conn
+            .pragma_update(None, "key", &pragma_value)
+            .map_err(|e| VaultError::SetEncryptionKey(e.to_string()));
+
+        // Zeroize key material from heap strings
+        hex_key.zeroize();
+        pragma_value.zeroize();
+        result?;
 
         conn.execute_batch("SELECT count(*) FROM sqlite_master;")
             .map_err(|_| VaultError::WrongPasswordOrCorrupted)?;

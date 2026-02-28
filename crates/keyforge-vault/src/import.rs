@@ -7,6 +7,7 @@ use crate::constants::{
 use crate::db::Vault;
 use crate::error::VaultError;
 use crate::token::NewToken;
+use zeroize::Zeroize;
 
 impl Vault {
     /// Import tokens from `otpauth://` URIs.
@@ -31,8 +32,10 @@ impl Vault {
         salt.copy_from_slice(salt_bytes);
 
         let params = keyforge_crypto::kdf::KdfParams::default();
-        let key = keyforge_crypto::kdf::derive_key(password, &salt, &params)?;
-        let json = keyforge_crypto::aead::decrypt(encrypted, &key)?;
+        let mut key = keyforge_crypto::kdf::derive_key(password, &salt, &params)?;
+        let result = keyforge_crypto::aead::decrypt(encrypted, &key);
+        key.zeroize();
+        let json = result?;
 
         let uris: Vec<String> =
             serde_json::from_slice(&json).map_err(|e| VaultError::Serialization(e.to_string()))?;
@@ -99,15 +102,33 @@ pub fn parse_otpauth_uri(uri: &str) -> Result<Option<NewToken>, String> {
         .map(|s| s.to_uppercase())
         .unwrap_or_else(|| DEFAULT_ALGORITHM.to_string());
 
+    // Validate algorithm
+    match algorithm.as_str() {
+        "SHA1" | "SHA256" | "SHA512" => {}
+        other => {
+            return Err(VaultError::InvalidUri(format!("unsupported algorithm: {other}")).into())
+        }
+    }
+
     let digits: u32 = params
         .get("digits")
         .and_then(|s| s.parse().ok())
         .unwrap_or(DEFAULT_DIGITS);
 
+    // Validate digits (only 6 or 8 per RFC 4226 / HOTP spec)
+    if digits != 6 && digits != 8 {
+        return Err(VaultError::InvalidUri(format!("unsupported digits: {digits}")).into());
+    }
+
     let period: u32 = params
         .get("period")
         .and_then(|s| s.parse().ok())
         .unwrap_or(DEFAULT_PERIOD);
+
+    // Validate period is positive
+    if period == 0 {
+        return Err(VaultError::InvalidUri("period must be > 0".to_string()).into());
+    }
 
     let counter: u64 = params
         .get("counter")
@@ -128,23 +149,39 @@ pub fn parse_otpauth_uri(uri: &str) -> Result<Option<NewToken>, String> {
 }
 
 fn urlencoding_decode(s: &str) -> String {
-    let mut bytes = Vec::new();
-    let mut chars = s.as_bytes().iter();
-    while let Some(&b) = chars.next() {
+    let bytes_in = s.as_bytes();
+    let mut bytes_out = Vec::with_capacity(bytes_in.len());
+    let mut i = 0;
+
+    while i < bytes_in.len() {
+        let b = bytes_in[i];
         if b == b'%' {
-            let hex: Vec<u8> = chars.by_ref().take(2).copied().collect();
-            if hex.len() == 2 {
-                if let Ok(byte) = u8::from_str_radix(&String::from_utf8_lossy(&hex), 16) {
-                    bytes.push(byte);
+            if i + 2 < bytes_in.len() {
+                let h1 = bytes_in[i + 1] as char;
+                let h2 = bytes_in[i + 2] as char;
+                if h1.is_ascii_hexdigit() && h2.is_ascii_hexdigit() {
+                    let hex_str = &s[i + 1..=i + 2];
+                    if let Ok(byte) = u8::from_str_radix(hex_str, 16) {
+                        bytes_out.push(byte);
+                        i += 3;
+                        continue;
+                    }
                 }
             }
+            // Invalid or incomplete percent-escape: keep '%' as-is
+            bytes_out.push(b'%');
+            i += 1;
         } else if b == b'+' {
-            bytes.push(b' ');
+            bytes_out.push(b' ');
+            i += 1;
         } else {
-            bytes.push(b);
+            bytes_out.push(b);
+            i += 1;
         }
     }
-    String::from_utf8(bytes).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
+
+    String::from_utf8(bytes_out)
+        .unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
 }
 
 #[cfg(test)]
