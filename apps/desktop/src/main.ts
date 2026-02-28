@@ -1,16 +1,41 @@
 /**
  * KeyForge desktop application — frontend entry point.
  *
- * This is loaded by the Tauri webview.  It bootstraps the UI by
- * importing shared components from `@keyforge/ui` and wiring up the
- * Tauri command bridge for vault / OTP operations.
+ * Bootstraps the UI and routes between lock screen ↔ token list
+ * based on vault state.  All crypto and storage happens in Rust
+ * via Tauri commands (see src-tauri/src/commands.rs).
  */
 
-const app = document.getElementById("app")!;
+import './styles/app.css';
+import { renderLockScreen } from './screens/lock';
+import { renderTokenList } from './screens/tokens';
+import { vaultIsLocked } from './bridge';
 
-app.innerHTML = `
-  <main class="lock-screen">
-    <h1 class="logo">KeyForge</h1>
-    <p class="tagline">Your keys, your devices.</p>
-  </main>
-`;
+const app = document.getElementById('app')!;
+
+/** Show the lock screen. */
+function showLock(): void {
+  renderLockScreen(app, showTokens);
+}
+
+/** Show the main token list. */
+function showTokens(): void {
+  renderTokenList(app, showLock);
+}
+
+/** Check vault state and render the right screen. */
+async function boot(): Promise<void> {
+  try {
+    const locked = await vaultIsLocked();
+    if (locked) {
+      showLock();
+    } else {
+      showTokens();
+    }
+  } catch {
+    // Tauri not ready yet or error — show lock screen
+    showLock();
+  }
+}
+
+boot();

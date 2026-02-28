@@ -1,0 +1,404 @@
+/* ── App styles ──────────────────────────────────────────────────────
+ *
+ * Uses design tokens from tokens.css. Dark theme, monospace codes,
+ * countdown urgency colors. Utility-first, no framework.
+ */
+
+/* ── Lock Screen ─────────────────────────────────────────────────── */
+
+.lock-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-6);
+}
+
+.lock-content {
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+}
+
+.lock-logo {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  letter-spacing: -0.5px;
+  margin-bottom: var(--space-1);
+}
+
+.lock-tagline {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-8);
+}
+
+.lock-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.lock-error {
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  margin-top: var(--space-2);
+}
+
+.lock-status {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  margin-top: var(--space-4);
+}
+
+/* ── Inputs ──────────────────────────────────────────────────────── */
+
+.input-group {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-input);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  transition: border-color var(--transition-fast);
+}
+
+.input:focus {
+  border-color: var(--color-border-focus);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.input-mono {
+  font-family: var(--font-code);
+  font-size: var(--text-sm);
+  letter-spacing: 1px;
+}
+
+select.input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  padding-right: var(--space-8);
+  cursor: pointer;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+
+.btn {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  transition: background-color var(--transition-fast), opacity var(--transition-fast);
+  cursor: pointer;
+  border: none;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-text-primary);
+  color: var(--color-text-inverse);
+}
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  font-size: var(--text-lg);
+  transition: background-color var(--transition-fast);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.btn-icon:hover {
+  background: var(--color-surface-hover);
+}
+
+/* ── App Shell ───────────────────────────────────────────────────── */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border-default);
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+.app-header button {
+  -webkit-app-region: no-drag;
+}
+
+.app-title {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+/* ── Token List ──────────────────────────────────────────────────── */
+
+.token-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2) 0;
+}
+
+.token-card {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--color-border-default);
+  transition: background-color var(--transition-fast);
+  position: relative;
+}
+
+.token-card:hover {
+  background: var(--color-surface-hover);
+}
+
+.token-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.token-issuer {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.token-account {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.token-code-area {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.token-code {
+  font-family: var(--font-code);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  letter-spacing: 2px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  white-space: nowrap;
+  color: var(--color-text-primary);
+  background: none;
+  border: none;
+}
+
+.token-code:hover {
+  background: var(--color-surface-overlay);
+}
+
+.token-code.copied {
+  color: var(--color-success);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  letter-spacing: 0;
+}
+
+.token-timer {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  font-variant-numeric: tabular-nums;
+  min-width: 28px;
+  text-align: right;
+}
+
+.token-timer.safe { color: var(--color-accent-green); }
+.token-timer.warning { color: var(--color-accent-amber); }
+.token-timer.danger { color: var(--color-accent-red); }
+
+.token-next-btn {
+  font-size: var(--text-base);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+}
+
+.token-next-btn:hover {
+  background: var(--color-surface-overlay);
+  color: var(--color-text-primary);
+}
+
+.token-delete {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.token-card:hover .token-delete {
+  opacity: 1;
+}
+
+.token-delete:hover {
+  color: var(--color-error);
+}
+
+/* ── Empty state ─────────────────────────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) var(--space-6);
+  text-align: center;
+}
+
+.empty-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-medium);
+  margin-bottom: var(--space-2);
+}
+
+.empty-sub {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16);
+  color: var(--color-text-secondary);
+}
+
+/* ── Add Token Form ──────────────────────────────────────────────── */
+
+.add-form-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+.add-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.form-field label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.form-field-half {
+  flex: 1;
+}
+
+.form-error {
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-focus);
+}
