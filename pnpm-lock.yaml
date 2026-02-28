@@ -20,6 +20,9 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@choochmeque/tauri-plugin-biometry-api':
+        specifier: ^0.2.6
+        version: 0.2.6
       '@keyforge/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -85,6 +88,9 @@ importers:
         version: 2.1.9
 
 packages:
+
+  '@choochmeque/tauri-plugin-biometry-api@0.2.6':
+    resolution: {integrity: sha512-baqYaDFxBYqAIfITBfkoW2ZYhduvTEl0Oza7s4vX/i2xJhPhedZ5p+U2Pn1bEqyXZKogs0pk1ERJejiv1mipMg==}
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -903,6 +909,10 @@ packages:
     hasBin: true
 
 snapshots:
+
+  '@choochmeque/tauri-plugin-biometry-api@0.2.6':
+    dependencies:
+      '@tauri-apps/api': 2.10.1
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true

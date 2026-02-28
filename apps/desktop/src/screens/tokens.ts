@@ -8,11 +8,13 @@
 
 import {
   tokenList,
+  tokenDelete,
   otpGenerateTotp,
   otpGenerateHotp,
   tokenIncrementCounter,
   vaultLock,
   clipboardWrite,
+  clipboardRead,
   type Token,
 } from '../bridge';
 import { renderAddTokenScreen } from './add-token';
@@ -23,6 +25,7 @@ import {
   ICON_SEARCH_POSITIONED,
   ICON_REFRESH,
   ICON_X,
+  ICON_TRASH,
 } from '../icons';
 
 // ── Constants (from @keyforge/shared where applicable) ──────────────
@@ -33,6 +36,7 @@ const URGENCY_DANGER_SECS = 5;
 const URGENCY_WARNING_SECS = 10;
 const PROGRESS_RING_RADIUS = 8;
 const PROGRESS_RING_CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RING_RADIUS;
+const FAVICON_URL_PREFIX = 'https://www.google.com/s2/favicons';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -91,6 +95,8 @@ let refreshing = false; // guard against overlapping async refreshCodes calls
 let searchQuery = '';
 let root: HTMLElement;
 let onLocked: () => void;
+let clipboardClearTimer: ReturnType<typeof setTimeout> | null = null;
+let lastCopiedCode: string | null = null;
 
 // ── Render ──────────────────────────────────────────────────────────
 
@@ -201,12 +207,15 @@ function renderList(): void {
       const code = codes.get(token.id) ?? '';
       const remaining = timeLeft(token.period);
       const initial = (token.issuer || '?')[0].toUpperCase();
+      const avatarHtml = token.icon && token.icon.startsWith(FAVICON_URL_PREFIX)
+        ? `<img class="token-avatar token-avatar-img" src="${escapeHtml(token.icon)}" alt="" data-initial="${initial}" /><div class="token-avatar token-avatar-letter" style="display:none">${initial}</div>`
+        : `<div class="token-avatar">${initial}</div>`;
 
       return `
       <div class="token-card" role="listitem" data-id="${token.id}" data-type="${token.token_type}"
            data-issuer="${escapeHtml(token.issuer.toLowerCase())}"
            data-account="${escapeHtml(token.account.toLowerCase())}">
-        <div class="token-avatar">${initial}</div>
+        ${avatarHtml}
         <div class="token-info">
           <span class="token-issuer">${escapeHtml(token.issuer)}</span>
           <span class="token-account">${escapeHtml(token.account)}</span>
@@ -221,10 +230,20 @@ function renderList(): void {
             }
           </div>
         </div>
+        <button class="token-delete-btn" data-id="${token.id}" title="Delete token" aria-label="Delete token">${ICON_TRASH}</button>
       </div>
     `;
     })
     .join('');
+
+  // Handle favicon load errors — fall back to letter avatar
+  list.querySelectorAll('.token-avatar-img').forEach((img) => {
+    img.addEventListener('error', () => {
+      (img as HTMLElement).style.display = 'none';
+      const fallback = img.nextElementSibling as HTMLElement | null;
+      if (fallback) fallback.style.display = 'flex';
+    });
+  });
 
   // Single event delegation for the entire list
   list.onclick = handleListClick;
@@ -312,6 +331,23 @@ function stopTick(): void {
 async function handleListClick(e: Event): Promise<void> {
   const target = e.target as HTMLElement;
 
+  // Delete button
+  const deleteBtn = target.closest('.token-delete-btn') as HTMLElement | null;
+  if (deleteBtn) {
+    e.stopPropagation();
+    const id = deleteBtn.dataset.id;
+    if (!id) return;
+    const token = tokens.find((t) => t.id === id);
+    if (!token) return;
+    if (!confirm(`Delete ${token.issuer}?`)) return;
+    try {
+      await tokenDelete(id);
+      await loadTokens();
+      showToast('Token deleted');
+    } catch { /* ignore */ }
+    return;
+  }
+
   // HOTP refresh button
   const refreshBtn = target.closest('.token-hotp-refresh') as HTMLElement | null;
   if (refreshBtn) {
@@ -340,6 +376,24 @@ async function handleListClick(e: Event): Promise<void> {
       card.classList.add('flash');
       setTimeout(() => card.classList.remove('flash'), 200);
       showToast('Copied');
+
+      // Schedule clipboard auto-clear when the current TOTP period expires
+      const token = tokens.find((t) => t.id === id);
+      if (token && token.token_type === 'totp') {
+        if (clipboardClearTimer) clearTimeout(clipboardClearTimer);
+        lastCopiedCode = rawCode;
+        const remaining = timeLeft(token.period);
+        clipboardClearTimer = setTimeout(async () => {
+          try {
+            const current = await clipboardRead();
+            if (current === lastCopiedCode) {
+              await clipboardWrite('');
+            }
+          } catch { /* clipboard unavailable */ }
+          lastCopiedCode = null;
+          clipboardClearTimer = null;
+        }, remaining * MS_PER_SECOND);
+      }
     } catch { /* clipboard unavailable */ }
     return;
   }
@@ -383,6 +437,11 @@ function handleKeyboard(e: KeyboardEvent): void {
 
 function cleanup(): void {
   stopTick();
+  if (clipboardClearTimer) {
+    clearTimeout(clipboardClearTimer);
+    clipboardClearTimer = null;
+  }
+  lastCopiedCode = null;
   document.removeEventListener('keydown', handleKeyboard);
   tokens = [];
   codes = new Map();

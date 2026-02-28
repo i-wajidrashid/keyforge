@@ -7,7 +7,15 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
-import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import { readText, writeText } from '@tauri-apps/plugin-clipboard-manager';
+import {
+  checkStatus as biometryCheckStatus,
+  authenticate as biometryAuthenticate,
+  setData as biometrySetData,
+  getData as biometryGetData,
+  hasData as biometryHasData,
+  type Status as BiometryStatus,
+} from '@choochmeque/tauri-plugin-biometry-api';
 
 // ── Types (mirror the Rust structs) ─────────────────────────────────
 
@@ -113,4 +121,49 @@ export function vaultExportUris(): Promise<string[]> {
 
 export async function clipboardWrite(text: string): Promise<void> {
   await writeText(text);
+}
+
+export async function clipboardRead(): Promise<string> {
+  return (await readText()) ?? '';
+}
+
+// ── Biometric authentication ────────────────────────────────────────
+
+export { type BiometryStatus };
+
+const BIO_DOMAIN = 'com.keyforge.app';
+const BIO_KEY = 'master_password';
+
+/** Check if biometric authentication is available on this device. */
+export async function biometryStatus(): Promise<BiometryStatus> {
+  return biometryCheckStatus();
+}
+
+/** Prompt biometric authentication. Resolves on success, rejects on failure/cancel. */
+export async function biometryAuth(reason: string): Promise<void> {
+  await biometryAuthenticate(reason, {
+    allowDeviceCredential: true,
+    cancelTitle: 'Cancel',
+    fallbackTitle: 'Use Password',
+    confirmationRequired: false,
+  });
+}
+
+/** Store master password in biometric-protected secure storage. */
+export async function biometryStorePassword(password: string): Promise<void> {
+  await biometrySetData({ domain: BIO_DOMAIN, name: BIO_KEY, data: password });
+}
+
+/** Check if a biometric-protected password is stored. */
+export async function biometryHasPassword(): Promise<boolean> {
+  return biometryHasData({ domain: BIO_DOMAIN, name: BIO_KEY });
+}
+
+/**
+ * Retrieve the master password from biometric-protected secure storage.
+ * Prompts for biometric authentication before returning.
+ */
+export async function biometryGetPassword(reason: string): Promise<string> {
+  const res = await biometryGetData({ domain: BIO_DOMAIN, name: BIO_KEY, reason });
+  return res.data;
 }
