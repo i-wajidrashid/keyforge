@@ -22,7 +22,7 @@ import {
   ICON_PLUS,
   ICON_LOCK,
   ICON_SETTINGS,
-  ICON_SEARCH,
+  ICON_SEARCH_POSITIONED,
   ICON_REFRESH,
 } from '../icons';
 
@@ -97,6 +97,9 @@ export function renderTokenList(
   rootEl: HTMLElement,
   onLockedCb: () => void,
 ): void {
+  // Clean up any previous listeners before re-rendering
+  cleanup();
+
   root = rootEl;
   onLocked = onLockedCb;
   searchQuery = '';
@@ -105,7 +108,7 @@ export function renderTokenList(
     <div class="app-shell">
       <header class="app-header">
         <div class="search-wrapper">
-          ${ICON_SEARCH.replace('width="14" height="14"', 'class="search-icon" width="14" height="14"')}
+          ${ICON_SEARCH_POSITIONED}
           <input id="search-input" class="search-input" type="text"
             placeholder="Search" spellcheck="false" autocomplete="off" />
           <button id="search-clear" class="search-clear" type="button" aria-label="Clear search">&times;</button>

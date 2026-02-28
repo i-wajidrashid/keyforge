@@ -23,9 +23,15 @@ function ensureContainer(): HTMLElement {
 export function showToast(message: string): void {
   const c = ensureContainer();
 
-  // Remove any existing toast
+  // Remove any existing toast after its dismiss animation
   if (dismissTimer) clearTimeout(dismissTimer);
-  c.innerHTML = '';
+  const existing = c.querySelector('.toast');
+  if (existing) {
+    existing.classList.add('dismissing');
+    setTimeout(() => {
+      if (c.contains(existing)) c.removeChild(existing);
+    }, TOAST_DISMISS_MS);
+  }
 
   const toast = document.createElement('div');
   toast.className = 'toast';
