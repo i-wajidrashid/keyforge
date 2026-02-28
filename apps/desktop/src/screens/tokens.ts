@@ -8,7 +8,6 @@
 
 import {
   tokenList,
-  tokenDelete,
   otpGenerateTotp,
   otpGenerateHotp,
   tokenIncrementCounter,
@@ -21,9 +20,9 @@ import { showToast } from '../toast';
 import {
   ICON_PLUS,
   ICON_LOCK,
-  ICON_SETTINGS,
   ICON_SEARCH_POSITIONED,
   ICON_REFRESH,
+  ICON_X,
 } from '../icons';
 
 // ── Constants (from @keyforge/shared where applicable) ──────────────
@@ -76,10 +75,11 @@ function progressRingSvg(remaining: number, period: number): string {
   </svg>`;
 }
 
+/** Cached div for HTML escaping — reused to avoid allocating a new element per call. */
+const _escDiv = document.createElement('div');
 function escapeHtml(s: string): string {
-  const div = document.createElement('div');
-  div.textContent = s;
-  return div.innerHTML;
+  _escDiv.textContent = s;
+  return _escDiv.innerHTML;
 }
 
 // ── State ───────────────────────────────────────────────────────────
@@ -87,6 +87,7 @@ function escapeHtml(s: string): string {
 let tokens: Token[] = [];
 let codes: Map<string, string> = new Map();
 let tickTimer: ReturnType<typeof setInterval> | null = null;
+let refreshing = false; // guard against overlapping async refreshCodes calls
 let searchQuery = '';
 let root: HTMLElement;
 let onLocked: () => void;
@@ -111,11 +112,10 @@ export function renderTokenList(
           ${ICON_SEARCH_POSITIONED}
           <input id="search-input" class="search-input" type="text"
             placeholder="Search" spellcheck="false" autocomplete="off" />
-          <button id="search-clear" class="search-clear" type="button" aria-label="Clear search">&times;</button>
+          <button id="search-clear" class="search-clear" type="button" aria-label="Clear search">${ICON_X}</button>
         </div>
         <div class="header-actions">
           <button id="add-btn" class="btn-icon" title="Add token" aria-label="Add token">${ICON_PLUS}</button>
-          <button id="settings-btn" class="btn-icon" title="Settings" aria-label="Settings">${ICON_SETTINGS}</button>
           <button id="lock-btn" class="btn-icon" title="Lock vault" aria-label="Lock vault">${ICON_LOCK}</button>
         </div>
       </header>
@@ -127,9 +127,6 @@ export function renderTokenList(
 
   document.getElementById('lock-btn')!.addEventListener('click', handleLock);
   document.getElementById('add-btn')!.addEventListener('click', handleAdd);
-  document.getElementById('settings-btn')!.addEventListener('click', () => {
-    showToast('Settings coming soon');
-  });
 
   const searchInput = document.getElementById('search-input') as HTMLInputElement;
   searchInput.addEventListener('input', () => {
@@ -162,19 +159,25 @@ async function loadTokens(): Promise<void> {
 }
 
 async function refreshCodes(): Promise<void> {
-  const newCodes = new Map<string, string>();
-  for (const token of tokens) {
-    try {
-      const code =
-        token.token_type === 'hotp'
-          ? await otpGenerateHotp(token.id)
-          : await otpGenerateTotp(token.id);
-      newCodes.set(token.id, code);
-    } catch {
-      // Leave empty — no placeholder strings
+  if (refreshing) return; // prevent overlapping calls
+  refreshing = true;
+  try {
+    const newCodes = new Map<string, string>();
+    for (const token of tokens) {
+      try {
+        const code =
+          token.token_type === 'hotp'
+            ? await otpGenerateHotp(token.id)
+            : await otpGenerateTotp(token.id);
+        newCodes.set(token.id, code);
+      } catch {
+        // Leave empty — no placeholder strings
+      }
     }
+    codes = newCodes;
+  } finally {
+    refreshing = false;
   }
-  codes = newCodes;
 }
 
 function renderList(): void {
@@ -381,4 +384,8 @@ function handleKeyboard(e: KeyboardEvent): void {
 function cleanup(): void {
   stopTick();
   document.removeEventListener('keydown', handleKeyboard);
+  tokens = [];
+  codes = new Map();
+  refreshing = false;
+  searchQuery = '';
 }

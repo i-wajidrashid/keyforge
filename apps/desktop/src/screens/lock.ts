@@ -81,6 +81,8 @@ export function renderLockScreen(
       } else {
         await vaultCreate(password);
       }
+      // Clear password from DOM immediately (security: don't keep in memory)
+      input.value = '';
       onUnlocked();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);

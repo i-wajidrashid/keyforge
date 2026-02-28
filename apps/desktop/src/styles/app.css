@@ -250,7 +250,11 @@ select.input {
   color: var(--color-text-tertiary);
   background: none;
   border: none;
-  font-size: var(--text-xs);
+}
+
+.search-clear svg {
+  width: 12px;
+  height: 12px;
 }
 
 .search-clear:hover {
